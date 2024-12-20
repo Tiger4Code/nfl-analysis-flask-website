@@ -1,0 +1,457 @@
+{% extends 'admintemplate/skeleton/base.html' %}
+
+{% block header %}
+    <!-- Custom styles for this page -->
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ 
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    
+
+
+    <!-- Generate Dynamic Table  -->
+    <script>
+        function generateTable(containerId, tableData) {
+            // alert(containerId)
+            const container = document.getElementById(containerId);
+            container.innerHTML = ""; // Clear existing content
+    
+            if (!tableData || tableData.length === 0) {
+                container.innerHTML = "<p>No data available.</p>";
+                return;
+            }
+    
+            // Create table structure
+            const table = document.createElement("table");
+            table.className = "table table-bordered table-striped";
+            table.setAttribute("id", `${containerId}_table`);
+            table.setAttribute("width", "100%");
+            table.setAttribute("cellspacing", "0");
+    
+            // Extract column names
+            const columns = Object.keys(tableData[0]);
+    
+            // Create header
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+            columns.forEach(column => {
+                const th = document.createElement("th");
+                th.textContent = column;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+    
+            // Create footer
+            const tfoot = document.createElement("tfoot");
+            const footerRow = headerRow.cloneNode(true); // Reuse the header structure
+            tfoot.appendChild(footerRow);
+            table.appendChild(tfoot);
+    
+            // Create body
+            const tbody = document.createElement("tbody");
+            tableData.forEach(row => {
+                const tr = document.createElement("tr");
+                columns.forEach(column => {
+                    const td = document.createElement("td");
+                    td.textContent = row[column] || ""; // Populate data
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+    
+            // Append table to container
+            container.appendChild(table);
+    
+            // Initialize DataTable
+            $(`#${containerId}_table`).DataTable({
+                responsive: true,
+                pageLength: 10,
+                scrollX: true, // Enables horizontal scrolling
+            });
+        }
+    </script>
+    
+    
+    <script>
+        $(document).ready(function() {
+            $('#loadingSpinner').hide();
+
+            $("#generateButton").click(function() {
+                // Collect parameters
+                const offensiveTeam = $("#offensive_team").val();
+                const defensiveTeam = $("#defensive_team").val();
+                const winning_team  = $("#winning_team").val();
+                const game = $("#game_selector").val();
+                const quarter = $("#quarter").val();
+                const visualizationType = $("#visualization_type").val();
+                const analysisMethod = $("#analysis_method").val();
+                // const metric = $("#metric").val();
+                const offenseFormation = $("#offenseFormation").val();
+                const receiverAlignment = $("#receiverAlignment").val();
+                const pff_passCoverage = $("#pff_passCoverage").val();
+
+                let csrfToken = document.getElementById('csrf_token').value;
+
+                $('#loadingSpinner').show();
+                // Make AJAX request
+                $.ajax({
+                    url: "generate_vis",
+                    method: "POST",
+                    data: {
+                        offensive_team: offensiveTeam,
+                        defensive_team: defensiveTeam,
+                        winning_team: winning_team,
+                        game: game,
+                        quarter: quarter,
+                        visualization_type: visualizationType,
+                        analysis_method: analysisMethod,
+                        //metric: metric,
+                        offenseFormation: offenseFormation, 
+                        receiverAlignment: receiverAlignment, 
+                        pff_passCoverage: pff_passCoverage, 
+                        
+                        csrfmiddlewaretoken: csrfToken // "{{ csrf_token() }}", // Pass CSRF token
+                    },
+                    success: function(response) {
+                        $('#loadingSpinner').hide();
+                        if (response.error) {
+                            alert("Oh, no! "+response.error)
+                        }else {
+
+
+                            // Handle titles with associated image file names
+                            if (response.titles_with_images && typeof response.titles_with_images === "object") {
+                                let contentHtml = ''; // HTML content container
+
+                                // Iterate over each title and its associated images
+                                Object.entries(response.titles_with_images).forEach(([title, images]) => {
+                                    // Append the title as an h2 heading
+                                    contentHtml += `<h2 class='text-info'>${title}</h2>`;
+
+                                    // Check if the images are an array and display them
+                                    if (Array.isArray(images) && images.length > 0) {
+                                        contentHtml += `<div class="container"><div class="row">`; // Start a Bootstrap row
+                                        images.forEach((imageFileName, index) => {
+                                            contentHtml += `
+                                                <div class="col-md-6 mb-3">
+                                                    <img src="data:image/png;base64,${imageFileName}" 
+                                                        alt="Visualization" 
+                                                        class="img-fluid clickable-image" 
+                                                        style="margin-bottom: 10px; cursor: pointer;">
+                                                </div>
+                                            `;
+
+                                            // Close and restart the row after every 2 images
+                                            if ((index + 1) % 2 === 0 && index !== images.length - 1) {
+                                                contentHtml += `</div><div class="row"><hr/>`;
+                                            }
+                                        });
+                                        contentHtml += `</div></div>`; // Close the Bootstrap row and container
+                                    } else {
+                                        // Handle empty image lists
+                                        contentHtml += `<p>No images available.</p>`;
+                                    }
+                                });
+
+                                // Display the generated HTML in the visualization container
+                                $("#visualization_result").html(contentHtml);
+
+                                // Add click event to dynamically load images into the modal
+                                $(".clickable-image").on("click", function () {
+                                    const imageSrc = $(this).attr("src");
+                                    $("#modalImage").attr("src", imageSrc); // Set the modal image source
+                                    $("#imageModal").modal("show"); // Show the modal
+                                });
+                            } else {
+                                // Handle invalid response structure
+                                $("#visualization_result").html('<p>No data available.</p>');
+                            }
+
+
+                            if (response.gen_ai_response) {
+                                // Generate the table dynamically
+                                $("#gen_ai_response_result").html(response.gen_ai_response);
+                            }
+                            
+                        }
+
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loadingSpinner').hide();
+                        alert("An error occurred while generating the visualization: " + error);
+                        $("#visualization_result").html(error);
+                    }
+                });
+            });
+        });
+    </script>
+    
+
+    <script>
+        $(document).ready(function() {
+            // Refresh the page when the reset button is clicked
+            $("#resetButton").click(function() {
+                location.reload(); // Reload the page
+            });
+        });
+    </script>
+    
+    {% endblock header %}
+
+{% block main %}
+
+
+
+<!-- gen_question_query/query_form.html -->
+
+
+<!-- Page Heading -->
+
+
+
+        <!-- Outer Row -->
+        <!-- --><div class="row justify-content-center"> 
+
+            <div class="col-xl-12 col-lg-12 col-md-12">
+
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <!-- Nested Row within Card Body -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="p-5">
+  
+
+ <!-- finance/templates/finance/ask_question.html -->
+
+ <h1>NFL Analysis</h1>
+ <div class="form-group">
+     <form method="post" id="jiraForm">
+        <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">
+
+         <div class="row mb-3">
+             <!-- Offensive Team -->
+             <div class="col-md-3">
+                 <label for="offensive_team" class="form-label">Offensive Team</label>
+                 <select class="form-control form-select" id="offensive_team" name="offensive_team">
+                     <option value="" selected disabled> Offensive Team</option>
+                     {% for team in unique_teams %}
+                         <option value="{{ team }}">{{ team }}</option>
+                     {% endfor %}
+                 </select>
+             </div>
+ 
+             <!-- Defensive Team -->
+             <div class="col-md-3">
+                 <label for="defensive_team" class="form-label">Defensive Team</label>
+                 <select class="form-control form-select" id="defensive_team" name="defensive_team">
+                     <option value="" selected disabled> Defensive Team</option>
+                     {% for team in unique_teams %}
+                         <option value="{{ team }}">{{ team }}</option>
+                     {% endfor %}
+                 </select>
+             </div>
+ 
+             <!-- Winning Team -->
+             <div class="col-md-3">
+                 <label for="winning_team" class="form-label">Winning Team</label>
+                 <select class="form-control form-select" id="winning_team" name="winning_team">
+                     <option value="" selected disabled> Winning Team</option>
+                     {% for team in unique_teams %}
+                         <option value="{{ team }}">{{ team }}</option>
+                     {% endfor %}
+                 </select>
+             </div>
+
+            <!-- Game Selector -->
+            <div class="col-md-3">
+                <label for="game_selector" class="form-label">Game</label>
+                <select class="form-control form-select" id="game_selector" name="game_selector">
+                    <option value="" selected disabled>Select Game</option>
+                    {% for game in games %}
+                        <option value="{{ game.gameId }}">{{ game.homeTeamAbbr }} X {{ game.visitorTeamAbbr }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+         </div>
+
+
+         <div class="row mb-3">
+            <!-- Offensive Team -->
+            <div class="col-md-3">
+                <label for="offenseFormation" class="form-label">Offensive Formation</label>
+                <select class="form-control form-select" id="offenseFormation" name="offenseFormation">
+                    <option value="" selected disabled>Select Offensive Formation</option>
+                    {% for item in offense_formations %}
+                        <option value="{{ item }}">{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Offensive receiverAlignment -->
+            <div class="col-md-3">
+                <label for="receiverAlignment" class="form-label">Receiver Alignment</label>
+                <select class="form-control form-select" id="receiverAlignment" name="receiverAlignment">
+                    <option value="" selected disabled>Receiver Alignment</option>
+                    {% for item in receiver_alignments %}
+                        <option value="{{ item }}">{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- pff_passCoverage -->
+            <div class="col-md-3">
+                <label for="pff_passCoverage" class="form-label">Pass Coverage</label>
+                <select class="form-control form-select" id="pff_passCoverage" name="pff_passCoverage">
+                    <option value="" selected disabled>Pass Coverage</option>
+                    {% for item in coverages %}
+                        <option value="{{ item }}">{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+                        <!-- Quarter -->
+                        <div class="col-md-3">
+                            <label for="quarter" class="form-label">Quarter</label>
+                            <select class="form-control form-select" id="quarter" name="quarter">
+                                <option value="" selected disabled> Quarter</option>
+                                {% for quarter in unique_quarters %}
+                                    <option value="{{ quarter }}">{{ quarter }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mt-4">
+            <div class="col text-center">
+                <button type="button" class="btn btn-primary me-2" id="generateButton">Visualize</button>
+                <button type="button" class="btn btn-secondary me-2" id="resetButton">Reset</button>
+                <button type="button" class="btn btn-success me-2" id="playGameButton">Play Game</button>
+                <button type="button" class="btn btn-info" id="predictButton">Predict</button>
+            </div>
+        </div>
+
+     </form>
+ </div>
+ <hr/>
+
+ <div class="form-group">
+    <h2>Graphs</h2>
+    <p> Analyze the average yards gained and how different factors such as play type (Motion, Pass, Run) and time buckets influence the results.  </p> 
+    <div class="row mb-3">
+        <div id="visualization_result" class="mt-4">
+            <!-- Visualization output will be injected here -->
+             Data Visualizations go here 
+        </div>
+    </div>
+
+    
+    <hr/>
+    <h2>Statistical Analysis</h2>
+    <div class="row mb-3">
+
+        <div id="visualization_statistics_result" class="mt-4">
+            <!-- Visualization output will be injected here -->
+             Statistics results go here 
+        </div>
+    </div>
+
+    <hr/>
+    <h2>AI-Assisted Strategy Evaluation</h2>
+    <div class="row mb-3">
+
+        <div id="gen_ai_response_result" class="mt-4">
+            <!-- Visualization output will be injected here -->
+            Analysis goes here 
+        </div>
+    </div>
+</div>
+
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+             </div>
+
+     </div>   <!---->
+
+
+ <!-- Loading spinner overlay -->
+<div id="loadingSpinner" class="loading-overlay">
+    <img class="rounded-circle" src="{{ url_for('static', filename='img/loading.gif') }}" width="200" alt="Loading...">
+</div>
+
+
+
+<!-- Bootstrap Modal for Image Popup -->
+<div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <!-- Image will be inserted here dynamically -->
+                <img id="modalImage" src="" alt="Magnified Image" class="img-fluid" width="100%">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock main %}
+
+
+{% block footerscripts %}
+
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+<!-- Page level plugins -->
+<script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+
+<!-- Page level custom scripts -->
+<script src="{{ url_for('static', filename='js/demo/datatables-demo.js') }}"></script>
+
+{% endblock footerscripts %}
+ 
