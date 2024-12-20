@@ -1,0 +1,224 @@
+from flask import Flask, render_template
+from flask import  request, jsonify
+
+# import io
+# import os 
+# import base64
+# import matplotlib.pyplot as plt 
+# import time 
+# from utils.bedrock.llm_prompts import LLMPrompt
+# from utils.bedrock.llm_functions import LLMService
+
+import pandas as pd
+from utils import helpers, helpers_vs#, helpers_stats
+from utils import general_helpers as ghelpers
+
+
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['WTF_CSRF_ENABLED'] = True
+
+
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect(app)
+
+
+
+BASE_PATH = 'dataset/kaggle/'
+AGGREGATED_DATA_TYPE = 1
+RAW_DATA_TYPE = 2
+
+# Visualization types
+VISUALIZATIONS = {
+    1: "Line Plot",
+    2: "Heatmap",
+    3: "Bar Chart",
+    4: "Scatter Plot",
+}
+
+# Statistical analysis methods
+STATISTICAL_ANALYSIS_METHODS = {
+    1: "ANOVA",
+    2: "t-Test",
+    3: "Chi-Square Test",
+    4: "Regression Analysis",
+}
+
+
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def get_cached_dataframe():
+    """Load and cache the dataframe."""
+    return helpers.prepare_and_load_df(loadFromFile=True)
+
+
+
+# @app.route('/')
+# def home():
+#     return "Hello, Flask!"
+
+@app.route('/')
+def home():
+    return render_template('admintemplate/home.html')
+
+
+@app.route('/visualize')
+def visualize():
+    # Read the CSV file
+    gamedf = pd.read_csv(f"{BASE_PATH}/games.csv")
+    unique_teams = sorted(pd.concat([gamedf['homeTeamAbbr'], gamedf['visitorTeamAbbr']]).unique())
+    unique_games = gamedf.gameId.unique()
+    games = gamedf.to_dict(orient='records')
+
+    # Use the cached dataframe
+    df = get_cached_dataframe()
+    unique_quarters = sorted(df['quarter'].unique())
+
+    pff_passCoverage_list = df.pff_passCoverage.unique()
+
+    # Context to pass to the template
+    context = {
+        'unique_teams': unique_teams,
+        'unique_games': unique_games,
+        'unique_quarters': unique_quarters,
+        'games': games,
+        'offense_formations': df.offenseFormation.unique(),
+        'receiver_alignments': df.receiverAlignment.unique(),
+        'coverages': pff_passCoverage_list,
+    }
+
+    # Render the Flask template
+    return render_template('admintemplate/nfl/visualize.html', **context)
+
+
+
+
+@app.route('/generate_vis', methods=['POST'])
+@csrf.exempt  # Remove this if you want CSRF protection enabled
+def generate_vis():
+    titles_with_images = {}
+    image_list = []
+
+    # Extract parameters from the request
+    offensive_team = request.form.get("offensive_team") if request.form.get("offensive_team") else None
+    defensive_team = request.form.get("defensive_team") if request.form.get("defensive_team") else None
+    winning_team = request.form.get("winning_team") if request.form.get("winning_team") else None
+    game_id = request.form.get("game") if request.form.get("game") else None
+    quarter = request.form.get("quarter") if request.form.get("quarter") else None
+    offense_formation = request.form.get("offenseFormation") if request.form.get("offenseFormation") else None
+    receiver_alignment = request.form.get("receiverAlignment") if request.form.get("receiverAlignment") else None
+    pff_pass_coverage = request.form.get("pff_passCoverage") if request.form.get("pff_passCoverage") else None
+
+
+    # # Printing the values
+    # print(f"Offensive Team = {offensive_team}")
+
+    # if len(quarter) == 0: 
+    #     print(f"quarter   = {quarter} len == 0")
+    # if len(pff_pass_coverage) == 0: 
+    #     print(f"pff_pass_coverage Team = {pff_pass_coverage} len zero ")      
+
+    # if len(defensive_team) == 0: 
+    #     print(f"Defensive Team = {defensive_team} len == 0")
+    #     defensive_team = None
+    # if defensive_team is None: 
+    #     print(f"Defensive Team = {defensive_team} is None")
+    
+    print(f"Defensive Team = {defensive_team}")
+    print(f"Winning Team = {winning_team}")
+    print(f"Game ID = {game_id}")
+    print(f"Quarter = {quarter}")
+    print(f"Offense Formation = {offense_formation}")
+    print(f"Receiver Alignment = {receiver_alignment}")
+    print(f"PFF Pass Coverage = {pff_pass_coverage}")
+
+
+    if offensive_team and defensive_team and offensive_team == defensive_team:
+        return jsonify({"error": "Offense team should be different from defense team!"})
+
+    # Use the cached dataframe
+    df = get_cached_dataframe()
+    print("-------------- size of df Load from cached data -------------")
+    print(df.shape[0])
+
+    # print("-------------- size of df Load from cached data -------------")
+    # print(df[df.playId > 0 ].shape[0])
+
+
+    # Filter dataframe
+    filtered_df = helpers.selectOffenseDeffenseTeams(
+        df,
+        game_id,
+        offensive_team,
+        defensive_team,
+        quarter,
+        winning_team,
+        offense_formation,
+        receiver_alignment,
+        pff_pass_coverage,
+    )
+    print("-------------- size of df Load from filtered_df -------------")
+    print(filtered_df.shape[0])
+    if not filtered_df.empty:
+        print("0) Normal Filtering")
+        # Perform analysis
+        image_list, motion_df, time_grouped_df = ghelpers.visualize_data_func(
+            filtered_df, offense_formation, receiver_alignment, pff_pass_coverage
+        )
+
+        # Generate AI analysis
+        gen_ai_response = ghelpers.genai_analysis(
+            aggregated_data=motion_df,
+            time_data=time_grouped_df,
+            offensive_team=offensive_team,
+            defensive_team=defensive_team,
+        )
+
+        # Create analysis title
+        analysis_title = helpers.generate_analysis_title(
+            game_id, offensive_team, defensive_team, quarter, winning_team, offense_formation, receiver_alignment, pff_pass_coverage
+        )
+        titles_with_images[analysis_title] = image_list
+        return jsonify({"titles_with_images": titles_with_images, 'sorted_df': None, 'gen_ai_response': gen_ai_response})
+
+    elif offensive_team or defensive_team:
+        if offensive_team:
+            print(f"2) Offensive Filtering for {offensive_team}")
+            offense_filtered_df = helpers.selectOffenseDeffenseTeams(
+                df, game_id, offensive_team, None, quarter, winning_team, offense_formation, receiver_alignment, pff_pass_coverage
+            )
+            offense_image_list, offense_motion_df, offense_time_grouped_df = ghelpers.visualize_data_func(
+                offense_filtered_df, offense_formation, receiver_alignment, pff_pass_coverage
+            )
+            titles_with_images[f"Analysis of {offensive_team} Team's Offensive Strategies"] = offense_image_list
+
+        if defensive_team:
+            print(f"3) Defensive Filtering for {defensive_team}")
+            defense_filtered_df = helpers.selectOffenseDeffenseTeams(
+                df, game_id, None, defensive_team, quarter, winning_team, offense_formation, receiver_alignment, pff_pass_coverage
+            )
+            defensive_image_list, defense_motion_df, defense_time_grouped_df = ghelpers.visualize_data_func(
+                defense_filtered_df, offense_formation, receiver_alignment, pff_pass_coverage
+            )
+            titles_with_images[f"Analysis of {defensive_team} Team's Offensive Strategies"] = defensive_image_list
+
+        # Generate AI analysis
+        gen_ai_response = ghelpers.genai_future_analysis(
+            offense_aggregated_df=offense_motion_df,
+            offense_time_grouped_df=offense_time_grouped_df,
+            defense_aggregated_df=defense_motion_df,
+            defense_time_grouped_df=defense_time_grouped_df,
+            offensive_team=offensive_team,
+            defensive_team=defensive_team,
+        )
+        return jsonify({"titles_with_images": titles_with_images, 'sorted_df': None, 'gen_ai_response': gen_ai_response})
+
+    return jsonify({"error": "Sorry, no matching data!"})
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
