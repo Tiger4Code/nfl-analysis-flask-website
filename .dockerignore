@@ -1,0 +1,46 @@
+# Ignore the .git directory
+.git
+
+# Ignore Dockerfile and Docker Compose files
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+
+# Ignore files and directories related to Python virtual environments
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv/
+*.egg-info/
+.eggs/
+*.egg
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+*.swp
+*~
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore logs and temp files
+*.log
+*.tmp
+*.bak
+
+# Ignore build artifacts
+build/
+dist/
+*.class
+*.o
+*.so
+
+# Ignore application-specific files
+.env
+.env.*
+*.config
+*.bak
