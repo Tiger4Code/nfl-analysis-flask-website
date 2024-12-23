@@ -148,11 +148,11 @@ def calculate_off_def_effectiveness(df):
     results_sorted = helpers.playsdf_offense_deffense_agg(df)
 
     # Display results
-    print("Defensive Weaknesses by Formation and Coverage Data Size:")
-    print(results_sorted.shape)
-    print("Defensive Weaknesses by Formation and Coverage:")
-    print(results_sorted.head(2))
-    print(results_sorted.columns)
+    # print("Defensive Weaknesses by Formation and Coverage Data Size:")
+    # print(results_sorted.shape)
+    # print("Defensive Weaknesses by Formation and Coverage:")
+    # print(results_sorted.head(2))
+    # print(results_sorted.columns)
 
 
 #calculate_off_def_effectiveness(df)
@@ -169,7 +169,7 @@ Pass aggregated data frame by offense/defense strategies
 """
 def visualize_off_def_effectiveness_one_attr(grouped_df, col='avg_yards_gained'):
     col = col if col is not None else 'avg_yards_gained'
-    print(f" col={col}")
+    # print(f" col={col}")
 
     title='Average Yards Gained '
     if col in COL_VIS_TITLE_MAPPING.keys():
@@ -221,7 +221,7 @@ def plot_metric_percentage_pie(grouped_df, metric, metric_name):
     """
     # Sum the selected metric and the "others"
     selected_metric = grouped_df[metric].sum()
-    print(f"Selected Metric == {selected_metric}")
+    # print(f"Selected Metric == {selected_metric}")
     others = 100 - selected_metric  # Assuming percentages add to 100
     
     # Data for the pie chart
@@ -818,9 +818,9 @@ def visualize_line_time_effect_on_offdeff_strategies(df, offensive_strategies_on
                                                      pff_passCoverage=None, 
                                                      filterData=False):
     
-    print(f"daoffenseFormationta  = {offenseFormation}")
-    print(f"offenseFormation  = {offenseFormation}")
-    print(f"pff_passCoverage  = {pff_passCoverage}")
+    # print(f"daoffenseFormationta  = {offenseFormation}")
+    # print(f"offenseFormation  = {offenseFormation}")
+    # print(f"pff_passCoverage  = {pff_passCoverage}")
 
     if filterData:
         df = helpers.filter_by_offdeff_strategy(df, offenseFormation, receiverAlignment, pff_passCoverage)

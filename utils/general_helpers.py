@@ -25,9 +25,7 @@ from utils.bedrock.llm_functions import LLMService
 """
 def visualize_data_func(filtered_df, offenseFormation=None, receiverAlignment=None, pff_passCoverage=None):
     image_list = []
-    if filtered_df is None: 
-        print("AAAaaaaLLLLLLL aaaa rrrr mmmm ! filtered data is None ")
-    print(f" data size {filtered_df.shape[0]}")
+
     plt.figure(figsize=(12, 8))
 
     # 0) Calculate aggregated data by offense/defense strategies 
@@ -102,7 +100,7 @@ def save_df_to_csv(df, filename):
 
     # Save the DataFrame to CSV
     df.to_csv(file_path, index=False)
-    print(f"CSV saved to {file_path}")
+    # (f"CSV saved to {file_path}")
     return file_path  # Return the file path in case you want to use it later
 
 
@@ -115,16 +113,14 @@ def genai_analysis(aggregated_data, time_data, offensive_team=None, defensive_te
     llmservice = LLMService()
 
     prompt = LLMPrompt.generate_nfl_analysis_prompt(aggregated_data=aggregated_data, time_data=time_data, offensive_team=offensive_team, defensive_team=defensive_team )
-    # else: # type 2
-    #     prompt = LLMPrompt.generate_nfl_raw_play_analysis_prompt(offense_filtered_df=dataframe1, defense_filtered_df=dataframe2, offensive_team=offensive_team, defensive_team=defensive_team )
       
-    print("---------------- genai_analysis ---------------------")
-    print(prompt)
-    print("-------------------------------------")
+    # print("---------------- genai_analysis ---------------------")
+    # print(prompt)
+    # print("-------------------------------------")
     
     answer = llmservice.invoke_model(prompt)
-    print(answer)
-    print("-------------------------------------")
+    # print(answer)
+    # print("-------------------------------------")
 
     # End the timer and calculate the elapsed time
     end_time = time.time()
@@ -157,13 +153,13 @@ def genai_future_analysis(
                                                            offensive_team=offensive_team, 
                                                            defensive_team=defensive_team )
       
-    print("------------------ genai_future_analysis -------------------")
-    print(prompt)
-    print("-------------------------------------")
+    # print("------------------ genai_future_analysis -------------------")
+    # print(prompt)
+    # print("-------------------------------------")
     
     answer = llmservice.invoke_model(prompt)
-    print(answer)
-    print("-------------------------------------")
+    # print(answer)
+    # print("-------------------------------------")
 
     # End the timer and calculate the elapsed time
     end_time = time.time()

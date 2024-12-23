@@ -6,14 +6,21 @@ import json
 import sys
 import os 
 
+import boto3
+from io import StringIO
+
+S3_BUCKET_NAME = "nfl2025"
+S3_FILE_KEY = "dataset/saved/game-play-player.csv"
+BASECDIR = 'dataset/kaggle'
+PREPARED_DF_FULL_FILE_PATH = "dataset/saved/game-play-player.csv"
+
 POSITIONS_IN_MOTION = ['WR', 'TE', 'FB', 'RB']
 MOTION_COLS = ['inMotionAtBallSnap', 'motionSinceLineset', 'shiftSinceLineset']
 ADDITIONAL_NEW_COLS = ['_winnerTeamAbbr', '_playSuccessful', 'any_motion', '_is_pass', '_is_run', 'redZone']
 SHOULD_NOT_BE_NULL_COLS = ['gameId', 'playId', 'nflId']
 TIME_BUCKET = 180 # 3 min * 60 = 180 seconds
 
-BASECDIR = 'dataset/kaggle/'
-PREPARED_DF_FULL_FILE_PATH = "dataset/saved/game-play-player.csv"
+
 
 
 """
@@ -63,38 +70,47 @@ def normalize_game_time(row):
     Merge Tracking data with Play data (add time and PlayDirection columns)
 """
 def merge_tracking_first_row_in_playdf(playdf):
-    # List of tracking file paths
-    tracking_paths = [f"../dataset/kaggle/tracking_week_{i}.csv" for i in range(1, 10)]
-
     # Initialize an empty list to store the first record DataFrames
     tracking_data = []
 
-    # Process each tracking file
-    for path in tracking_paths:
-        # Read the tracking file
-        tracking_df = pd.read_csv(path)
+    # Process each tracking file from S3
+    for i in range(1, 10):
+        s3_file_key = f"{BASECDIR}/tracking_week_{i}.csv"
         
+        # Read the tracking file from S3
+        tracking_df = read_csv_from_s3(S3_BUCKET_NAME, s3_file_key)
+
         # Extract the first matching record for each gameId and playId
         first_tracking_record = tracking_df.groupby(['gameId', 'playId']).first().reset_index()
-        
+
         # Select only the necessary columns for the join
         columns_to_merge = ['gameId', 'playId', 'time', 'playDirection']
         tracking_data.append(first_tracking_record[columns_to_merge])
 
-        # Concatenate all the processed tracking data
-        merged_tracking_df = pd.concat(tracking_data, ignore_index=True)
+    # Concatenate all the processed tracking data
+    merged_tracking_df = pd.concat(tracking_data, ignore_index=True)
 
-        # Merge playdf with the combined tracking data
-        result_df = playdf.merge(merged_tracking_df, on=['gameId', 'playId'], how='left')
-
-        # Display the resulting dataframe
-        result_df.shape
-
+    # Merge playdf with the combined tracking data
+    result_df = playdf.merge(merged_tracking_df, on=['gameId', 'playId'], how='left')
 
     return result_df
 
 
+def read_csv_from_s3(bucket_name, file_key):
+    """Read a CSV file from S3 and return a DataFrame."""
 
+    s3 = boto3.client('s3')
+    obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+    data = obj['Body'].read().decode('utf-8')
+    return pd.read_csv(StringIO(data))
+
+def write_csv_to_s3(df, bucket_name, file_key):
+    """Write a DataFrame to a CSV file in S3."""
+
+    s3 = boto3.client('s3')
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer, index=False)
+    s3.put_object(Bucket=bucket_name, Key=file_key, Body=csv_buffer.getvalue())
 """
 Load data into unified dataframe and add required columns
 Additional Columns:
@@ -105,47 +121,40 @@ Return:
     df
 """
 def prepare_and_load_df(loadFromFile=False):
-    if not loadFromFile: 
-        print(f"Rebuild the File and Save it in {PREPARED_DF_FULL_FILE_PATH}")
+    if not loadFromFile:
 
-        gamedf = pd.read_csv(f"{BASECDIR}games.csv")
-        playdf = pd.read_csv(f"{BASECDIR}plays.csv")
-        playerdf = pd.read_csv(f"{BASECDIR}players.csv")
-        playerplaydf = pd.read_csv(f"{BASECDIR}player_play.csv")
+        gamedf = read_csv_from_s3(S3_BUCKET_NAME, f"{BASECDIR}/games.csv")
+        playdf = read_csv_from_s3(S3_BUCKET_NAME, f"{BASECDIR}/plays.csv")
+        playerdf = read_csv_from_s3(S3_BUCKET_NAME, f"{BASECDIR}/players.csv")
+        playerplaydf = read_csv_from_s3(S3_BUCKET_NAME, f"{BASECDIR}/player_play.csv")
 
         # Add winner team columns
         gamedf['_winnerTeamAbbr'] = np.where(gamedf['homeFinalScore'] > gamedf['visitorFinalScore'],
-                                            gamedf['homeTeamAbbr'], 
-                                            gamedf['visitorTeamAbbr'])
+                                             gamedf['homeTeamAbbr'], 
+                                             gamedf['visitorTeamAbbr'])
         # Add Successful play column to playdf 
         playdf['_playSuccessful'] = (
             ((playdf['yardsGained'] > 0) | (playdf['expectedPointsAdded'] > 0)) 
-            # &
-            # ((playdf['passResult'] == "C") | (playdf['hadRushAttempt'] == 1)) &
-            # # (playdf['playNullifiedByPenalty'] == "N") &
-            # # (playdf['sackYardsOffense'] == 0) &
-            # (playdf['passResult'] != "IN")  
-            #& (playdf['tackleForALossYardage'].fillna(0) == 0)
         ).astype(int)
 
         playdf.dropna(subset=['gameClock'], inplace=True)
+
         # Apply gameClock time normalization (quarter - 1) * 900 + (minutes * 60 + seconds)
         playdf['_global_game_time'] = playdf.apply(normalize_game_time, axis=1)
+
         # Group into time buckets (e.g., 3-minute intervals within each game)
         playdf['_game_time_bucket'] = playdf['_global_game_time'] // TIME_BUCKET  # 3-minute intervals within each game
 
-        playdf['_is_pass']  = playdf['passResult'].notnull().astype(int)  # Add the new column playdf['_is_pass'] 
-        playdf['_is_run']  = playdf['rushLocationType'].notnull().astype(int)  # Add the new column playdf['_is_pass'] 
+        playdf['_is_pass'] = playdf['passResult'].notnull().astype(int)
+        playdf['_is_run'] = playdf['rushLocationType'].notnull().astype(int)
 
         # Merge Playdf with Tracking records to get PlayDirection and Time 
-        # ONLY add the first record for each gameId, playId to get the play direction
         result_df = merge_tracking_first_row_in_playdf(playdf)
 
         # Add redzone column to playdf 
         calculate_red_zone(result_df)
 
-        print("Merge Data Frames")
-        # Merge the dataframes if the file doesn't exist
+        # Merge the dataframes
         game_play_df = pd.merge(gamedf, result_df, on='gameId', how='inner')
         game_play_player_df = pd.merge(game_play_df, playerplaydf, on=['gameId', 'playId'], how='inner')
         df = pd.merge(game_play_player_df, playerdf, on='nflId', how='inner')
@@ -158,18 +167,13 @@ def prepare_and_load_df(loadFromFile=False):
             lambda row: row.any() if not row.isnull().all() else pd.NA, axis=1
         )
 
-        # Merge with tracking data 
-        # final_df = pd.merge(full_data_df, tracking_df, on=['gameId', 'playId', 'nflId'], how='inner')
-
-        # Save the final merged dataset to CSV
-        df.to_csv(PREPARED_DF_FULL_FILE_PATH, index=False)
-                # # Check if the file exists
+        # Save the final merged dataset to S3
+        write_csv_to_s3(df, S3_BUCKET_NAME, S3_FILE_KEY)
     else:
-        print('Load from path!')
-        # Load the CSV file into df if it exists
-        df = pd.read_csv(PREPARED_DF_FULL_FILE_PATH)
-    return df 
+        # Load the CSV file from S3
+        df = read_csv_from_s3(S3_BUCKET_NAME, S3_FILE_KEY)
 
+    return df
 
 
 
@@ -187,44 +191,28 @@ def selectOffenseDeffenseTeams(df,
                                receiverAlignment=None, 
                                pff_passCoverage=None):
     
-    print("-------------- size of df Load from filtered_df inside selectOffenseDeffenseTeams -------------")
-    print(df.shape[0])
-
-    # print(f"Func gameId={gameId}")
-    # print(f"Func quarter={quarter}")
     cond = df.playId > 0 
-
-    # print(f"Data type of df.gameId: {df['gameId'].dtype}")
-    # print(f"Data type of parameter gameId: {type(gameId)}")
 
 
     # If gameId is provided, add the condition for gameId
     if gameId is not None:
-        print(f"Func gameId={gameId} is not none")
         cond &= df['gameId'] == gameId
-    else: 
-        print(f"Func gameId={gameId} is none!!")
 
     # If offensiveTeam is provided, add the condition for offensiveTeam
     if offensiveTeam is not None:
-        print(f"Func offensiveTeam={offensiveTeam} is not none")
         cond &= df['possessionTeam'] == offensiveTeam
 
     # If defensiveTeam is provided, add the condition for defensiveTeam
     if defensiveTeam is not None:
-        print(f"Func defensiveTeam={defensiveTeam} is not none")
         cond &= df['defensiveTeam'] == defensiveTeam
     
     if quarter is not None:
-        print(f"Func quarter={quarter} is not none")
         cond &= df['quarter'] == quarter
 
     if winningTeam is not None:
-        print(f"Func winningTeam={winningTeam} is not none")
         if '_winnerTeamAbbr' in df.columns:
             cond &= df['_winnerTeamAbbr'] == winningTeam # offensiveTeam
 
-    #print(f"cond={gameId}!")
     # Return the filtered DataFrame
     output_df = df[cond].copy()
 
@@ -363,8 +351,6 @@ def playsdf_offense_deffense_custom_agg(df, agg_by_list=[], sort_by='success_rat
     if len(agg_by_list) == 0 or agg_by_list is None: 
         agg_by_list = ['offenseFormation', 'receiverAlignment', 'pff_passCoverage']
     
-    print("inside aggregate function, params are: ")
-    print(agg_by_list)
 
     grouped_df = df.groupby(agg_by_list).agg(
         total_plays=('playId', 'count'),
@@ -419,10 +405,6 @@ def filter_by_offdeff_strategy(df, offenseFormation=None, receiverAlignment=None
     if pff_passCoverage is not None:
         df = df[df['pff_passCoverage'] == pff_passCoverage]
 
-    # If no data is left after filtering, show a message and return
-    # if df.empty:
-    #     print(f"No data available for the selected filters.")
-    #     return
     return df 
 
 # ---------------------------------

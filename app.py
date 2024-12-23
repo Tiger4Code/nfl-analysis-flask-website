@@ -25,7 +25,6 @@ csrf = CSRFProtect(app)
 
 
 
-BASE_PATH = 'dataset/kaggle/'
 AGGREGATED_DATA_TYPE = 1
 RAW_DATA_TYPE = 2
 
@@ -67,7 +66,9 @@ def home():
 @app.route('/visualize')
 def visualize():
     # Read the CSV file
-    gamedf = pd.read_csv(f"{BASE_PATH}/games.csv")
+    # gamedf = pd.read_csv(f"{helpers.BASECDIR}/games.csv")
+    gamedf = helpers.read_csv_from_s3(helpers.S3_BUCKET_NAME, f"{helpers.BASECDIR}/games.csv")
+
     unique_teams = sorted(pd.concat([gamedf['homeTeamAbbr'], gamedf['visitorTeamAbbr']]).unique())
     unique_games = gamedf.gameId.unique()
     games = gamedf.to_dict(orient='records')
@@ -112,39 +113,13 @@ def generate_vis():
     pff_pass_coverage = request.form.get("pff_passCoverage") if request.form.get("pff_passCoverage") else None
 
 
-    # # Printing the values
-    # print(f"Offensive Team = {offensive_team}")
-
-    # if len(quarter) == 0: 
-    #     print(f"quarter   = {quarter} len == 0")
-    # if len(pff_pass_coverage) == 0: 
-    #     print(f"pff_pass_coverage Team = {pff_pass_coverage} len zero ")      
-
-    # if len(defensive_team) == 0: 
-    #     print(f"Defensive Team = {defensive_team} len == 0")
-    #     defensive_team = None
-    # if defensive_team is None: 
-    #     print(f"Defensive Team = {defensive_team} is None")
-    
-    print(f"Defensive Team = {defensive_team}")
-    print(f"Winning Team = {winning_team}")
-    print(f"Game ID = {game_id}")
-    print(f"Quarter = {quarter}")
-    print(f"Offense Formation = {offense_formation}")
-    print(f"Receiver Alignment = {receiver_alignment}")
-    print(f"PFF Pass Coverage = {pff_pass_coverage}")
-
-
     if offensive_team and defensive_team and offensive_team == defensive_team:
         return jsonify({"error": "Offense team should be different from defense team!"})
 
     # Use the cached dataframe
     df = get_cached_dataframe()
-    print("-------------- size of df Load from cached data -------------")
-    print(df.shape[0])
-
     # print("-------------- size of df Load from cached data -------------")
-    # print(df[df.playId > 0 ].shape[0])
+    # print(df.shape[0])
 
 
     # Filter dataframe
@@ -159,10 +134,10 @@ def generate_vis():
         receiver_alignment,
         pff_pass_coverage,
     )
-    print("-------------- size of df Load from filtered_df -------------")
-    print(filtered_df.shape[0])
+    # print("-------------- size of df Load from filtered_df -------------")
+    # print(filtered_df.shape[0])
     if not filtered_df.empty:
-        print("0) Normal Filtering")
+        # print("0) Normal Filtering")
         # Perform analysis
         image_list, motion_df, time_grouped_df = ghelpers.visualize_data_func(
             filtered_df, offense_formation, receiver_alignment, pff_pass_coverage
@@ -185,7 +160,7 @@ def generate_vis():
 
     elif offensive_team or defensive_team:
         if offensive_team:
-            print(f"2) Offensive Filtering for {offensive_team}")
+            #print(f"2) Offensive Filtering for {offensive_team}")
             offense_filtered_df = helpers.selectOffenseDeffenseTeams(
                 df, game_id, offensive_team, None, quarter, winning_team, offense_formation, receiver_alignment, pff_pass_coverage
             )
@@ -195,7 +170,7 @@ def generate_vis():
             titles_with_images[f"Analysis of {offensive_team} Team's Offensive Strategies"] = offense_image_list
 
         if defensive_team:
-            print(f"3) Defensive Filtering for {defensive_team}")
+            # print(f"3) Defensive Filtering for {defensive_team}")
             defense_filtered_df = helpers.selectOffenseDeffenseTeams(
                 df, game_id, None, defensive_team, quarter, winning_team, offense_formation, receiver_alignment, pff_pass_coverage
             )
@@ -220,5 +195,5 @@ def generate_vis():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
 
