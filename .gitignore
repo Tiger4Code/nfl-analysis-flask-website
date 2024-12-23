@@ -60,3 +60,6 @@ dataset/
 .DS_Store
 
 utils/__pycache__/
+utils/__pycache__/*
+utils/bedrock/__pycache__/
+utils/bedrock/__pycache__/*
