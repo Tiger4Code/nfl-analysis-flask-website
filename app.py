@@ -54,12 +54,6 @@ def get_cached_dataframe():
 
 
 
-# @app.route('/')
-# def home():
-#     return "Hello, Flask!"
-
-
-
 @app.route('/')
 def visualize():
     # Read the CSV file
