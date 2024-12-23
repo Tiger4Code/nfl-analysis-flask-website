@@ -58,12 +58,9 @@ def get_cached_dataframe():
 # def home():
 #     return "Hello, Flask!"
 
+
+
 @app.route('/')
-def home():
-    return render_template('admintemplate/home.html')
-
-
-@app.route('/visualize')
 def visualize():
     # Read the CSV file
     # gamedf = pd.read_csv(f"{helpers.BASECDIR}/games.csv")
