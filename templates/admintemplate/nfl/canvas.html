@@ -1,0 +1,174 @@
+{% extends 'admintemplate/skeleton/base.html' %}
+
+{% block header %}
+    <!-- Custom styles for this page -->    
+    <style>
+        html,
+        body {
+          height: 100%;
+          background: rgb(248,249,250);
+        }
+        .game{
+          margin-bottom: 15px;
+        }
+        .game-hold{
+          background: #fff;
+          text-align: center;
+          margin-left: 5px;
+          margin-right: 5px;
+        }
+        .select-game{
+          text-align: center;
+          margin-top: 60px;
+          margin-bottom: 60px;
+        }
+        .timelines{
+            max-height: 700px;
+            overflow: scroll;
+        }
+        .timeline{
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .play{
+            font-size: 42px;
+        }
+        .active-timeline .play{
+            color: red;
+        }
+        .controls{
+            background: #f2f2f2;
+            padding: 10px;
+        }
+        #accordionSidebar{
+          display: none;
+        }
+        .container-fluid{
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+        .relative{
+          position: relative;
+        }
+        .fix-hold{
+          position: fixed;
+          top: 100px;
+        }
+        .navbar{
+          display: none;
+        }
+    </style>
+    
+    {% endblock header %}
+
+{% block main %}
+
+
+
+<main>
+    <h1 class="display-3 fw-bold select-game">
+      {{game.home_team}} VS. {{game.visitor_team}}
+    </h1>
+    <div class="row">
+        <div class="game col-12">
+          <div class="p-lg-5 game-hold">
+            <h3 class="fw-normal text-muted mb-3">Play Number: {{play.play_number}}</h3>
+            <h3 class="fw-normal text-muted mb-3">Quarter: {{play.quarter}}</h3>
+            <h3 class="fw-normal text-muted mb-3">Down: {{play.down}}</h3>
+            <h3 class="fw-normal text-muted mb-3">yards To Go: {{play.yards_to_go}}</h3>
+            <p>{{play.name}}</p>
+          </div>
+        </div>
+    </div>
+    <div class="row">
+      <div class="col-2">
+        <div class="row">
+          {% for hplayer in home_players %}
+            <div class="col-6">
+              <div class="card mb-2" style="border-color: {{hplayer.color}};border-width: 5px;">
+                <img src="{{hplayer.image | safe}}" class="card-img-top" alt="avatar">
+                  <div class="card-body">
+                    Position: {{hplayer.position}}<br>
+                      <a href="#" class="player-select" data-id="{{hplayer.id}}"> {{hplayer.name}}</a>
+                      {% if hplayer.was_running_route == '1' %}<hr>Route Run: {{hplayer.route_ran}}{% endif %}
+                  </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-8 relative">
+        <div class="fixed-canvas">
+          <div class="row mb-2 controls">
+              <div class="col">
+                <button id="pauseButton" class="btn btn-primary">Pause</button>
+                <button id="resetButton" class="btn btn-primary">Reset</button>
+              </div>
+              <div class="col">
+                <div class="row mb-1">
+                  <div class="col">
+                    <label for="speedControl">Low Speed</label>
+                  </div>
+                  <div class="col">
+                    <label for="speedControl">Medium Speed</label>
+                  </div>
+                  <div class="col">
+                    <label for="speedControl">High Speed</label>
+                  </div>
+                </div>
+                <input id="speedControl" type="range" min="1" max="3" step="0.1" value="1" class="form-control">
+              </div>
+            </div>
+            <canvas id="footballField" width="1200" height="600"></canvas>
+        </div>
+      </div>
+      <div class="col-2">
+        <div class="row">
+          {% for vplayer in visiter_players %}
+            <div class="col-6">
+              <div class="card mb-2" style="border-color: {{vplayer.color}};border-width: 5px;">
+                <img src="{{vplayer.image | safe}}" class="card-img-top" alt="avatar">
+                <div class="card-body">
+                  Position: {{vplayer.position}} <hr>
+                  <a href="#" class="player-select" data-id="{{vplayer.id}}"> {{vplayer.name}}</a>
+                  {% if vplayer.was_running_route == '1' %}<hr>Route Run: {{vplayer.route_ran}}{% endif %}
+                </div>
+            </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+{% endblock main %}
+
+
+{% block footerscripts %}
+
+<script>
+    
+    let play_ball_target_x = {% if play.target_x == 'NA' %}0{% else %}{{play.target_x}}{% endif %};
+    let play_ball_target_y = {% if play.target_y == 'NA' %}0{% else %}{{play.target_y}}{% endif %};
+    let downInfo = ['{{ordinal[play.down]}}', {{play.yards_to_go}}, '{% if play.possession_team == game.home_team %}right{% else %}left{% endif %}'];
+    let home_team = ['{{teams[game.home_team]}}','{{game.home_team}}'];
+    let visitor_team = ['{{teams[game.visitor_team]}}','{{game.visitor_team}}'];
+    let line_of_scrimmage = [{{play.absolute_yeard_line_number}}, '{% if play.possession_team == game.home_team %}left{% else %}right{% endif %}']
+    let frame_count_ball_rece = {{frame_count_ball_rece}};
+    let players = {{players | safe}};
+</script>
+
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+
+{% endblock footerscripts %}
+ 

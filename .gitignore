@@ -36,7 +36,6 @@ build/
 .eggs/
 
 # Static and media files (if generated dynamically)
-static/
 media/
 
 # Pytest / Coverage
@@ -63,3 +62,5 @@ utils/__pycache__/
 utils/__pycache__/*
 utils/bedrock/__pycache__/
 utils/bedrock/__pycache__/*
+database.sqlite
+database.sqlite.tar.gz

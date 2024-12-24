@@ -1,5 +1,9 @@
 from flask import Flask, render_template
 from flask import  request, jsonify
+from threading import Timer
+import sqlite3
+import json
+import webbrowser
 
 # import io
 # import os 
@@ -24,6 +28,8 @@ from flask_wtf.csrf import CSRFProtect
 csrf = CSRFProtect(app)
 
 
+connection = sqlite3.connect('database.sqlite', check_same_thread=False)
+connection.row_factory = sqlite3.Row
 
 AGGREGATED_DATA_TYPE = 1
 RAW_DATA_TYPE = 2
@@ -51,6 +57,9 @@ from functools import lru_cache
 def get_cached_dataframe():
     """Load and cache the dataframe."""
     return helpers.prepare_and_load_df(loadFromFile=True)
+
+def open_browser():
+    webbrowser.open("http://localhost:5001")
 
 
 
@@ -184,7 +193,163 @@ def generate_vis():
     return jsonify({"error": "Sorry, no matching data!"})
 
 
+@app.route('/games')
+def home():
+    query = "SELECT * FROM games WHERE 1"
+    cursor = connection.cursor()
+    cursor.execute(query)
+    games = cursor.fetchall()
+    return render_template('admintemplate/nfl/games.html', games=games)
+
+# games to select play
+@app.route('/game/<int:id>')
+def game(id):
+    
+    cursor = connection.cursor()
+    query = "SELECT * FROM plays WHERE game_id = ? order by play_number ASC"
+    cursor.execute(query, [id])
+    plays = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM games WHERE id = ?", [id])
+    game = cursor.fetchone()
+    
+    return render_template('admintemplate/nfl/plays.html', plays=plays, game=game)
+
+# games to select play
+@app.route('/game/<int:id>/play/<int:play_id>')
+def play(id, play_id):
+    
+    cursor = connection.cursor() 
+    
+    cursor.execute("SELECT * FROM games WHERE id = ?", [id])
+    game = cursor.fetchone()
+    
+    cursor.execute("SELECT * FROM plays WHERE game_id = ? and play_number = ?", [id, play_id])
+    play = cursor.fetchone()
+    
+    cursor.execute("SELECT * FROM teams WHERE 1")
+    teams_data = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM play_metrics WHERE game_id = ? and play_id = ?", [id, play_id])
+    play_metrics = cursor.fetchall()
+    
+
+    cursor.execute("SELECT * FROM players WHERE 1")
+    player_details = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM player_metrics WHERE game_id = ? and play_id = ?", [id, play_id])
+    player_metrics = cursor.fetchall()
+    
+    
+    ordinal = ['0th', '1st', '2nd', '3rd', '4th']
+    playerMap = {}
+    home_players = []
+    visiter_players = []
+    teams = {}
+    player_colors = [
+        "#B27300",  # Dark Orange
+        "#00B2B2",  # Dark Cyan
+        "#B200B2",  # Dark Magenta
+        "#005757",  # Dark Teal
+        "#2CA5A5",  # Dark Turquoise
+        "#B2593A",  # Dark Coral
+        "#A3A3C6",  # Dark Lavender
+        "#B28F00",  # Dark Gold
+        "#B28C8C",  # Dark Peach
+        "#86B200",  # Dark Lime
+        "#98102B",  # Dark Crimson
+        "#350061",  # Dark Indigo
+        "#A354A3",  # Dark Violet
+        "#580000",  # Dark Maroon
+        "#B28F00",  # Dark Amber
+        "#6CB26C",  # Dark Mint
+        "#00537A",  # Dark Cerulean
+        "#B200B2",  # Dark Fuchsia
+        "#599F9F",  # Dark Aquamarine
+        "#AE584D",  # Dark Salmon
+        "#868686",  # Dark Silver
+        "#599F00"   # Dark Chartreuse
+    ]
+    player_color_map = {}
+
+    
+    for player in player_details:
+        playerMap[player['id']] = player
+    
+    color_index = 0
+    
+    for play_metric in play_metrics:
+        if play_metric['name'] == game['home_team']:
+            hplayer = dict(playerMap[play_metric['player_id']])
+            hplayer['was_running_route'] = play_metric['was_running_route']
+            hplayer['route_ran'] = play_metric['route_ran']
+            hplayer['color'] = player_colors[color_index]
+            player_color_map[play_metric['player_id']] = player_colors[color_index]
+            home_players.append(hplayer)
+        if play_metric['name'] == game['visitor_team']:
+            vplayer = dict(playerMap[play_metric['player_id']])
+            vplayer['was_running_route'] = play_metric['was_running_route']
+            vplayer['route_ran'] = play_metric['route_ran']
+            vplayer['color'] = player_colors[color_index]
+            player_color_map[play_metric['player_id']] = player_colors[color_index]
+            visiter_players.append(vplayer)
+        color_index += 1
+
+    for team in teams_data:
+        teams[team['abbreviation']] = team['name']
+    
+    color = {game['home_team']: 'yellow', game['visitor_team']: 'red'}
+    players = {}
+    frame_count_ball_rece = 0
+    
+    for playerMetric in player_metrics:
+        if playerMetric['player_id'] in players:
+            players[playerMetric['player_id']]['playerDataList'].append(
+                {
+                    'x': playerMetric['x'],
+                    'y': playerMetric['y'],
+                    's': playerMetric['s'],
+                    'a': playerMetric['a'],
+                    'o': playerMetric['o'],
+                    'frame_type': playerMetric['frame_type'],
+                    'frame_id': playerMetric['frame_id'],
+                    'event': playerMetric['event']
+                }
+            )
+            if playerMetric['event'] == 'pass_arrived':
+                frame_count_ball_rece = playerMetric['frame_id']
+        else:
+            players[playerMetric['player_id']] = {
+                'player_id': playerMetric['player_id'],
+                'name': playerMetric['name'],
+                'player_color': player_color_map[playerMetric['player_id']],
+                'jersey_number': playerMetric['jersey_number'],
+                'club': playerMetric['club'],
+                'play_direction': playerMetric['play_direction'],
+                'color': color[playerMetric['club']],
+                'position': playerMap[playerMetric['player_id']]['position'],
+                'currentPointIndex': 0, 'down': play['down'],
+                'yards_to_go': play['yards_to_go'],
+                'possession_team': play['possession_team'],
+                'progress': 0,
+                'completed': False,
+                'playerDataList': [
+                    {
+                        'x': playerMetric['x'],
+                        'y': playerMetric['y'],
+                        's': playerMetric['s'],
+                        'a': playerMetric['a'],
+                        'o': playerMetric['o'],
+                        'frame_type': playerMetric['frame_type'],
+                        'frame_id': playerMetric['frame_id'],
+                        'event': playerMetric['event']
+                    }
+                ]
+            }
+            
+    return render_template('admintemplate/nfl/canvas.html', play=play, game=game, player_metrics=player_metrics, teams=teams, play_metrics=play_metrics, player_details=player_details, ordinal=ordinal, visiter_players=visiter_players, home_players=home_players, players=json.dumps(list(players.values())), frame_count_ball_rece=frame_count_ball_rece)
 
 if __name__ == '__main__':
-    app.run(debug=False, host="0.0.0.0")
+    Timer(1, open_browser).start()  # Open the browser after starting the server
+    app.run(debug=True, port=5001)
 
