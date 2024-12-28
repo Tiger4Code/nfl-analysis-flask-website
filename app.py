@@ -2,19 +2,14 @@ from flask import Flask, render_template
 from flask import  request, jsonify
 from threading import Timer
 import sqlite3
+import os 
 import json
+import subprocess
 import webbrowser
 
-# import io
-# import os 
-# import base64
-# import matplotlib.pyplot as plt 
-# import time 
-# from utils.bedrock.llm_prompts import LLMPrompt
-# from utils.bedrock.llm_functions import LLMService
 
 import pandas as pd
-from utils import helpers, helpers_vs#, helpers_stats
+from utils import helpers, helpers_vs #, helpers_stats
 from utils import general_helpers as ghelpers
 
 
@@ -195,6 +190,10 @@ def generate_vis():
 
 @app.route('/games')
 def home():
+    if not os.path.exists("database.sqlite") and os.path.exists("database.sqlite.tar.gz"):
+        print("database.sqlite not found. Extracting database.sqlite.tar.gz...")
+        subprocess.run(["tar", "-xzvf", "database.sqlite.tar.gz"], check=True)
+    
     query = "SELECT * FROM games WHERE 1"
     cursor = connection.cursor()
     cursor.execute(query)

@@ -86,10 +86,9 @@
           {% for hplayer in home_players %}
             <div class="col-6">
               <div class="card mb-2" style="border-color: {{hplayer.color}};border-width: 5px;">
-                <img src="{{hplayer.image | safe}}" class="card-img-top" alt="avatar">
                   <div class="card-body">
-                    Position: {{hplayer.position}}<br>
-                      <a href="#" class="player-select" data-id="{{hplayer.id}}"> {{hplayer.name}}</a>
+                      <a href="#" class="player-select" data-id="{{hplayer.id}}"> {{hplayer.name}}</a><br><hr>
+                      Position: {{hplayer.position}}
                       {% if hplayer.was_running_route == '1' %}<hr>Route Run: {{hplayer.route_ran}}{% endif %}
                   </div>
               </div>
@@ -127,10 +126,10 @@
           {% for vplayer in visiter_players %}
             <div class="col-6">
               <div class="card mb-2" style="border-color: {{vplayer.color}};border-width: 5px;">
-                <img src="{{vplayer.image | safe}}" class="card-img-top" alt="avatar">
                 <div class="card-body">
-                  Position: {{vplayer.position}} <hr>
-                  <a href="#" class="player-select" data-id="{{vplayer.id}}"> {{vplayer.name}}</a>
+                  <a href="#" class="player-select" data-id="{{vplayer.id}}"> {{vplayer.name}}</a><br>
+                  <hr>
+                  Position: {{vplayer.position}} 
                   {% if vplayer.was_running_route == '1' %}<hr>Route Run: {{vplayer.route_ran}}{% endif %}
                 </div>
             </div>
