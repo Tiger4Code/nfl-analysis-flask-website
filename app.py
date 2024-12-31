@@ -187,19 +187,18 @@ def generate_vis():
 
     return jsonify({"error": "Sorry, no matching data!"})
 
+
 @app.route('/predict', methods=['POST'])
 @csrf.exempt  
 def predict():
-
     # Extract parameters from the request
     offensive_team = request.form.get("offensive_team") if request.form.get("offensive_team") else None
     defensive_team = request.form.get("defensive_team") if request.form.get("defensive_team") else None
-    winning_team = request.form.get("winning_team") if request.form.get("winning_team") else None
-    game_id = request.form.get("game") if request.form.get("game") else None
-    quarter = request.form.get("quarter") if request.form.get("quarter") else 1
     offense_formation = request.form.get("offenseFormation") if request.form.get("offenseFormation") else None
     receiver_alignment = request.form.get("receiverAlignment") if request.form.get("receiverAlignment") else None
     pff_pass_coverage = request.form.get("pff_passCoverage") if request.form.get("pff_passCoverage") else None
+
+    quarter = request.form.get("quarter") if request.form.get("quarter") else 1
 
     downs = request.form.get("downs") if request.form.get("downs") else 1
     game_clock = request.form.get("game_clock") if request.form.get("game_clock") else "00:30"
