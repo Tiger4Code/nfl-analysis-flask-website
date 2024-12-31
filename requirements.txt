@@ -3,3 +3,6 @@ matplotlib
 jupyter
 numpy
 plotly
+
+scikit-learn
+tensorflow

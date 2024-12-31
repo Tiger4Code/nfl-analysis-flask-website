@@ -4,7 +4,6 @@
     <!-- Custom styles for this page -->
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
  
     <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
@@ -74,8 +73,68 @@
             });
         }
     </script>
+     
+    <script>
+        $(document).ready(function() {
+            $('#loadingSpinner').hide();
+
+            $("#predictButton").click(function() {
+                // Collect parameters
+                const offensiveTeam = $("#offensive_team").val();
+                const defensiveTeam = $("#defensive_team").val();
+                const winning_team  = $("#winning_team").val();
+                const game = $("#game_selector").val();
+                const quarter = $("#quarter").val();
+                const analysisMethod = $("#analysis_method").val();
+                const offenseFormation = $("#offenseFormation").val();
+                const receiverAlignment = $("#receiverAlignment").val();
+                const pff_passCoverage = $("#pff_passCoverage").val();
+
+                let csrfToken = document.getElementById('csrf_token').value;
+
+                $('#loadingSpinner').show();
+                // Make AJAX request
+                $.ajax({
+                    url: "predict",
+                    method: "POST",
+                    data: {
+                        offensive_team: offensiveTeam,
+                        defensive_team: defensiveTeam,
+                        winning_team: winning_team,
+                        game: game,
+                        quarter: quarter,
+                        analysis_method: analysisMethod,
+                        offenseFormation: offenseFormation, 
+                        receiverAlignment: receiverAlignment, 
+                        pff_passCoverage: pff_passCoverage, 
+                        
+                        csrfmiddlewaretoken: csrfToken // "{{ csrf_token() }}", // Pass CSRF token
+                    },
+                    success: function(response) {
+                        $('#loadingSpinner').hide();
+                        if (response.error) {
+                            alert("Oh, no! "+response.error)
+                        }else {
+                            if (response.prediction) {
+                                // Generate the table dynamically
+                                $("#prediction_response_result").html("Predicted Yardage: " +response.prediction);
+                            }
+                            
+                        }
+
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loadingSpinner').hide();
+                        alert("An error occurred while generating the predictions: " + error);
+                        $("#prediction_response_result").html(error);
+                    }
+                });
+            });
+        });
+    </script>
     
-    
+
+
     <script>
         $(document).ready(function() {
             $('#loadingSpinner').hide();
@@ -107,9 +166,7 @@
                         winning_team: winning_team,
                         game: game,
                         quarter: quarter,
-                        visualization_type: visualizationType,
                         analysis_method: analysisMethod,
-                        //metric: metric,
                         offenseFormation: offenseFormation, 
                         receiverAlignment: receiverAlignment, 
                         pff_passCoverage: pff_passCoverage, 
@@ -315,18 +372,58 @@
                 </select>
             </div>
 
-                        <!-- Quarter -->
-                        <div class="col-md-3">
-                            <label for="quarter" class="form-label">Quarter</label>
-                            <select class="form-control form-select" id="quarter" name="quarter">
-                                <option value="" selected disabled> Quarter</option>
-                                {% for quarter in unique_quarters %}
-                                    <option value="{{ quarter }}">{{ quarter }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+            <!-- Quarter -->
+            <div class="col-md-3">
+                <label for="quarter" class="form-label">Quarter</label>
+                <select class="form-control form-select" id="quarter" name="quarter">
+                    <option value="" selected disabled> Quarter</option>
+                    {% for quarter in unique_quarters %}
+                        <option value="{{ quarter }}">{{ quarter }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
         </div>
+
+
+
+        <div class="row mb-3">
+
+            <!-- yardline_number -->
+            <div class="col-md-3">
+                <label for="yardline_number" class="form-label">Yardline No</label>
+                <select class="form-control form-select" id="yardline_number" name="yardline_number">
+                    <option value="" selected disabled>Yardline No</option>
+                    {% for yardline_number in yardline_numbers %}
+                        <option value="{{ yardline_number }}">{{ yardline_number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- game_clock -->
+            <div class="col-md-3">
+                <label for="game_clock" class="form-label">Game Clock</label>
+                <select class="form-control form-select" id="game_clock" name="game_clock">
+                    <option value="" selected disabled>Game Clock</option>
+                    {% for clock in game_clock %}
+                        <option value="{{ clock }}">{{ clock }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Downs -->
+            <div class="col-md-3">
+                <label for="downs" class="form-label">Downs</label>
+                <select class="form-control form-select" id="downs" name="downs">
+                    <option value="" selected disabled> Quarter</option>
+                    {% for down in downs %}
+                        <option value="{{ down }}">{{ down }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+        </div>
+
 
         <!-- Action Buttons -->
         <div class="row mt-4">
@@ -370,6 +467,15 @@
         <div id="gen_ai_response_result" class="mt-4">
             <!-- Visualization output will be injected here -->
             Analysis goes here 
+        </div>
+    </div>
+
+ 
+    <div class="row mb-3">
+
+        <div id="prediction_response_result" class="mt-4">
+            <!-- Visualization output will be injected here -->
+            Predictions goes here 
         </div>
     </div>
 </div>

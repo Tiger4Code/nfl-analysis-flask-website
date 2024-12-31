@@ -10,7 +10,7 @@ from flask import  request, jsonify
 # from utils.bedrock.llm_functions import LLMService
 
 import pandas as pd
-from utils import helpers, helpers_vs#, helpers_stats
+from utils import helpers, features_engineering #, helpers_vs#, helpers_stats
 from utils import general_helpers as ghelpers
 
 
@@ -69,13 +69,21 @@ def visualize():
     unique_quarters = sorted(df['quarter'].unique())
 
     pff_passCoverage_list = df.pff_passCoverage.unique()
-
+    game_clock = features_engineering.generate_game_clock_values()
+    # print("----------------- game clock ------------")
+    # print(game_clock)
+    # print("----------------- downs ------------")
+    # print(df.down.unique())
+    # print("----------------- game clock ------------")
     # Context to pass to the template
     context = {
         'unique_teams': unique_teams,
         'unique_games': unique_games,
         'unique_quarters': unique_quarters,
         'games': games,
+        'game_clock': game_clock,
+        'downs': df.down.unique(),
+        'yardline_numbers': features_engineering.generate_yardline_numbers(),
         'offense_formations': df.offenseFormation.unique(),
         'receiver_alignments': df.receiverAlignment.unique(),
         'coverages': pff_passCoverage_list,
@@ -180,6 +188,58 @@ def generate_vis():
             defensive_team=defensive_team,
         )
         return jsonify({"titles_with_images": titles_with_images, 'sorted_df': None, 'gen_ai_response': gen_ai_response})
+
+    return jsonify({"error": "Sorry, no matching data!"})
+
+
+@app.route('/predict', methods=['POST'])
+@csrf.exempt  
+def predict():
+
+    # Extract parameters from the request
+    offensive_team = request.form.get("offensive_team") if request.form.get("offensive_team") else None
+    defensive_team = request.form.get("defensive_team") if request.form.get("defensive_team") else None
+    winning_team = request.form.get("winning_team") if request.form.get("winning_team") else None
+    game_id = request.form.get("game") if request.form.get("game") else None
+    quarter = request.form.get("quarter") if request.form.get("quarter") else 1
+    offense_formation = request.form.get("offenseFormation") if request.form.get("offenseFormation") else None
+    receiver_alignment = request.form.get("receiverAlignment") if request.form.get("receiverAlignment") else None
+    pff_pass_coverage = request.form.get("pff_passCoverage") if request.form.get("pff_passCoverage") else None
+
+    downs = request.form.get("downs") if request.form.get("downs") else 1
+    game_clock = request.form.get("game_clock") if request.form.get("game_clock") else "00:30"
+    yardline_number = request.form.get("yardline_number") if request.form.get("yardline_number") else 1
+
+    # "offenseFormation", "receiverAlignment", "pff_passCoverage", 
+    # "down", "possessionTeam", "defensiveTeam",
+    # "quarter", 'gameClock', 
+    # "yardlineNumber" , "playDirection"
+    
+    if offensive_team is not None and defensive_team is not None and offense_formation is not None and receiver_alignment is not None and pff_pass_coverage is not None:
+        if offensive_team and defensive_team and offensive_team == defensive_team:
+            return jsonify({"error": "Offense team should be different from defense team!"})
+        else: 
+            # call model 
+            df = features_engineering.create_dataframe_from_values(offenseFormation=offense_formation, 
+                                                              receiverAlignment=receiver_alignment, 
+                                                              pff_passCoverage=pff_pass_coverage,
+                                                              down=downs,
+                                                              possessionTeam=offensive_team,
+                                                              defensiveTeam=defensive_team,                                               
+                                                              quarter=quarter,
+                                                              gameClock=game_clock, 
+                                                              yardlineNumber=yardline_number, 
+                                                              playDirection="left")
+            
+            prediction = features_engineering.inference(df=df)
+            print("-------------- prediction ---------------")
+            print(prediction)
+        return jsonify({'prediction': prediction})
+    else: 
+        return jsonify({"error": "Please select offense, defense teams, their strategies, besides downs, game clock, and yards number"})
+
+
+   
 
     return jsonify({"error": "Sorry, no matching data!"})
 
