@@ -236,11 +236,11 @@ def predict():
 
 @app.route('/games')
 def home():
-    if os.path.exists("database.sqlite") and os.path.getsize("database.sqlite") < 1 * 1024 ** 3:
-        os.remove("database.sqlite")
+    # if os.path.exists("database.sqlite") and os.path.getsize("database.sqlite") < 1 * 1024 ** 3:
+    #     os.remove("database.sqlite")
 
-    if os.path.exists("database.sqlite.tar.gz"):
-        subprocess.run(["tar", "-xzvf", "database.sqlite.tar.gz"], check=True)
+    # if os.path.exists("database.sqlite.tar.gz"):
+    #     subprocess.run(["tar", "-xzvf", "database.sqlite.tar.gz"], check=True)
     
     query = "SELECT * FROM games WHERE 1"
     cursor = connection.cursor()
