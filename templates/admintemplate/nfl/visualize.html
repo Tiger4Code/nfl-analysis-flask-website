@@ -29,7 +29,7 @@
 
          <div class="row mb-3">
              <!-- Offensive Team -->
-             <div class="col-md-3">
+             <div class="col-md-2">
                  <label for="offensive_team" class="form-label">Offensive Team</label>
                  <select class="form-control form-select" id="offensive_team" name="offensive_team">
                      <option value="" selected disabled> Offensive Team</option>
@@ -40,7 +40,7 @@
              </div>
  
              <!-- Defensive Team -->
-             <div class="col-md-3">
+             <div class="col-md-2">
                  <label for="defensive_team" class="form-label">Defensive Team</label>
                  <select class="form-control form-select" id="defensive_team" name="defensive_team">
                      <option value="" selected disabled> Defensive Team</option>
@@ -50,34 +50,8 @@
                  </select>
              </div>
  
-             <!-- Winning Team -->
-             <div class="col-md-3">
-                 <label for="winning_team" class="form-label">Winning Team</label>
-                 <select class="form-control form-select" id="winning_team" name="winning_team">
-                     <option value="" selected disabled> Winning Team</option>
-                     {% for team in unique_teams %}
-                         <option value="{{ team }}">{{ team }}</option>
-                     {% endfor %}
-                 </select>
-             </div>
-
-            <!-- Game Selector -->
-            <div class="col-md-3">
-                <label for="game_selector" class="form-label">Game</label>
-                <select class="form-control form-select" id="game_selector" name="game_selector">
-                    <option value="" selected disabled>Select Game</option>
-                    {% for game in games %}
-                        <option value="{{ game.gameId }}">{{ game.homeTeamAbbr }} X {{ game.visitorTeamAbbr }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-         </div>
-
-
-         <div class="row mb-3">
             <!-- Offensive Team -->
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="offenseFormation" class="form-label">Offensive Formation</label>
                 <select class="form-control form-select" id="offenseFormation" name="offenseFormation">
                     <option value="" selected disabled>Select Offensive Formation</option>
@@ -88,7 +62,7 @@
             </div>
 
             <!-- Offensive receiverAlignment -->
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="receiverAlignment" class="form-label">Receiver Alignment</label>
                 <select class="form-control form-select" id="receiverAlignment" name="receiverAlignment">
                     <option value="" selected disabled>Receiver Alignment</option>
@@ -99,7 +73,7 @@
             </div>
 
             <!-- pff_passCoverage -->
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="pff_passCoverage" class="form-label">Pass Coverage</label>
                 <select class="form-control form-select" id="pff_passCoverage" name="pff_passCoverage">
                     <option value="" selected disabled>Pass Coverage</option>
@@ -109,8 +83,36 @@
                 </select>
             </div>
 
-            <!-- Quarter -->
+            <!-- Winning Team
+             <div class="col-md-3">
+                 <label for="winning_team" class="form-label">Winning Team</label>
+                 <select class="form-control form-select" id="winning_team" name="winning_team">
+                     <option value="" selected disabled> Winning Team</option>
+                     {% for team in unique_teams %}
+                         <option value="{{ team }}">{{ team }}</option>
+                     {% endfor %}
+                 </select>
+             </div>
+            -->
+
+            <!-- Game Selector
             <div class="col-md-3">
+                <label for="game_selector" class="form-label">Game</label>
+                <select class="form-control form-select" id="game_selector" name="game_selector">
+                    <option value="" selected disabled>Select Game</option>
+                    {% for game in games %}
+                        <option value="{{ game.gameId }}">{{ game.homeTeamAbbr }} X {{ game.visitorTeamAbbr }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            -->
+         </div>
+
+
+         <div class="row mb-2">
+
+            <!-- Quarter -->
+            <div class="col-md-2">
                 <label for="quarter" class="form-label">Quarter</label>
                 <select class="form-control form-select" id="quarter" name="quarter">
                     <option value="" selected disabled> Quarter</option>
@@ -120,14 +122,10 @@
                 </select>
             </div>
 
-        </div>
 
-
-
-        <div class="row mb-3">
 
             <!-- yardline_number -->
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="yardline_number" class="form-label">Yardline No</label>
                 <select class="form-control form-select" id="yardline_number" name="yardline_number">
                     <option value="" selected disabled>Yardline No</option>
@@ -138,7 +136,7 @@
             </div>
 
             <!-- game_clock -->
-            <div class="col-md-3">
+            <div class="col-md-2"> 
                 <label for="game_clock" class="form-label">Game Clock</label>
                 <select class="form-control form-select" id="game_clock" name="game_clock">
                     <option value="" selected disabled>Game Clock</option>
@@ -149,7 +147,7 @@
             </div>
 
             <!-- Downs -->
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="downs" class="form-label">Downs</label>
                 <select class="form-control form-select" id="downs" name="downs">
                     <option value="" selected disabled> Quarter</option>
@@ -165,10 +163,10 @@
         <!-- Action Buttons -->
         <div class="row mt-4">
             <div class="col text-center">
-                <button type="button" class="btn btn-secondary me-2" id="resetButton">Reset</button>
                 <button type="button" class="btn btn-primary me-2" id="generateButton">Run Analysis</button>
                 <a href="/games" class="btn btn-success me-2" target="_blank">Interactive Data Visualizations</a>
                 <button type="button" class="btn btn-info" id="predictButton">Yards Gain Prediction</button>
+                <button type="button" class="btn btn-secondary me-2" id="resetButton">Reset</button>
             </div>
         </div>
 
@@ -186,7 +184,6 @@
         </div>
     </div>
 
-    
     <hr/>
     <h2>Statistical Analysis</h2>
     <div class="row mb-3">
@@ -256,7 +253,6 @@
 
 {% endblock main %}
 
-
 {% block footerscripts %}
 
 <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
@@ -277,13 +273,15 @@
                 // Collect parameters
                 const offensiveTeam = $("#offensive_team").val();
                 const defensiveTeam = $("#defensive_team").val();
-                const winning_team  = $("#winning_team").val();
-                const game = $("#game_selector").val();
-                const quarter = $("#quarter").val();
-                const analysisMethod = $("#analysis_method").val();
+
                 const offenseFormation = $("#offenseFormation").val();
                 const receiverAlignment = $("#receiverAlignment").val();
                 const pff_passCoverage = $("#pff_passCoverage").val();
+
+                const quarter = $("#quarter").val();
+                const yardline_number = $("#yardline_number").val();
+                const game_clock = $("#game_clock").val();
+                const downs = $("#downs").val();
 
                 let csrfToken = document.getElementById('csrf_token').value;
 
@@ -295,15 +293,16 @@
                     data: {
                         offensive_team: offensiveTeam,
                         defensive_team: defensiveTeam,
-                        winning_team: winning_team,
-                        game: game,
-                        quarter: quarter,
-                        analysis_method: analysisMethod,
                         offenseFormation: offenseFormation, 
                         receiverAlignment: receiverAlignment, 
                         pff_passCoverage: pff_passCoverage, 
-                        
-                        csrfmiddlewaretoken: csrfToken // "{{ csrf_token() }}", // Pass CSRF token
+    
+                        quarter:quarter,
+                        yardline_number: yardline_number,
+                        game_clock:game_clock, 
+                        downs:downs,
+
+                        csrfmiddlewaretoken: csrfToken
                     },
                     success: function(response) {
                         $('#loadingSpinner').hide();
@@ -312,7 +311,10 @@
                         }else {
                             if (response.prediction) {
                                 // Generate the table dynamically
-                                $("#prediction_response_result").html("Predicted Yardage: " +response.prediction);
+                                let contentHtml = '';     
+                                contentHtml += `<h2 class='text-info'>Predicted Value</h2>`;
+                                contentHtml += `<div ><b>${response.prediction}</b></div>`;
+                                $("#prediction_response_result").html(contentHtml);
                             }
                             
                         }
@@ -422,7 +424,6 @@
                                 // Handle invalid response structure
                                 $("#visualization_result").html('<p>No data available.</p>');
                             }
-
 
                             if (response.gen_ai_response) {
                                 // Generate the table dynamically
