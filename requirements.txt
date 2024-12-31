@@ -4,6 +4,9 @@ Flask
 flask_wtf
 matplotlib
 numpy
+scikit-learn
+tensorflow
 pandas
 scipy
 seaborn
+
