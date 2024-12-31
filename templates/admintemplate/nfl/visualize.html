@@ -111,7 +111,6 @@
 
          <div class="row mb-2">
 
-
             <!-- Quarter -->
             <div class="col-md-2">
                 <label for="quarter" class="form-label">Quarter</label>
@@ -312,7 +311,10 @@
                         }else {
                             if (response.prediction) {
                                 // Generate the table dynamically
-                                $("#prediction_response_result").html("Predicted Yardage: " +response.prediction);
+                                let contentHtml = '';     
+                                contentHtml += `<h2 class='text-info'>Predicted Value</h2>`;
+                                contentHtml += `<div ><b>${response.prediction}</b></div>`;
+                                $("#prediction_response_result").html(contentHtml);
                             }
                             
                         }
