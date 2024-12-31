@@ -1,8 +1,12 @@
-seaborn
+boto3
+botocore
+Flask
+flask_wtf
 matplotlib
-jupyter
 numpy
-plotly
-
 scikit-learn
 tensorflow
+pandas
+scipy
+seaborn
+

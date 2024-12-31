@@ -99,10 +99,27 @@ def merge_tracking_first_row_in_playdf(playdf):
 def read_csv_from_s3(bucket_name, file_key):
     """Read a CSV file from S3 and return a DataFrame."""
 
-    s3 = boto3.client('s3')
-    obj = s3.get_object(Bucket=bucket_name, Key=file_key)
-    data = obj['Body'].read().decode('utf-8')
-    return pd.read_csv(StringIO(data))
+    # Extract the filename from the file_key
+    filename = os.path.basename(file_key)
+    
+    # Define the local file path
+    local_file_path = os.path.join('dataset', filename)
+    
+    # Check if the file exists locally
+    if os.path.exists(local_file_path):
+        return pd.read_csv(local_file_path)
+    else:
+        # Download the file from S3
+        s3 = boto3.client('s3')
+        obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+        data = obj['Body'].read().decode('utf-8')
+        
+        # Save the file locally
+        with open(local_file_path, 'w') as file:
+            file.write(data)
+        
+        # Read and return the DataFrame
+        return pd.read_csv(StringIO(data))
 
 def write_csv_to_s3(df, bucket_name, file_key):
     """Write a DataFrame to a CSV file in S3."""
