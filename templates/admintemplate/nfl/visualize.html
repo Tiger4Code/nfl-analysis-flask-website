@@ -1,205 +1,9 @@
 {% extends 'admintemplate/skeleton/base.html' %}
 
-{% block header %}
+    {% block header %}
     <!-- Custom styles for this page -->
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
- 
-    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
-    
 
-
-    <!-- Generate Dynamic Table  -->
-    <script>
-        function generateTable(containerId, tableData) {
-            // alert(containerId)
-            const container = document.getElementById(containerId);
-            container.innerHTML = ""; // Clear existing content
-    
-            if (!tableData || tableData.length === 0) {
-                container.innerHTML = "<p>No data available.</p>";
-                return;
-            }
-    
-            // Create table structure
-            const table = document.createElement("table");
-            table.className = "table table-bordered table-striped";
-            table.setAttribute("id", `${containerId}_table`);
-            table.setAttribute("width", "100%");
-            table.setAttribute("cellspacing", "0");
-    
-            // Extract column names
-            const columns = Object.keys(tableData[0]);
-    
-            // Create header
-            const thead = document.createElement("thead");
-            const headerRow = document.createElement("tr");
-            columns.forEach(column => {
-                const th = document.createElement("th");
-                th.textContent = column;
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-    
-            // Create footer
-            const tfoot = document.createElement("tfoot");
-            const footerRow = headerRow.cloneNode(true); // Reuse the header structure
-            tfoot.appendChild(footerRow);
-            table.appendChild(tfoot);
-    
-            // Create body
-            const tbody = document.createElement("tbody");
-            tableData.forEach(row => {
-                const tr = document.createElement("tr");
-                columns.forEach(column => {
-                    const td = document.createElement("td");
-                    td.textContent = row[column] || ""; // Populate data
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-    
-            // Append table to container
-            container.appendChild(table);
-    
-            // Initialize DataTable
-            $(`#${containerId}_table`).DataTable({
-                responsive: true,
-                pageLength: 10,
-                scrollX: true, // Enables horizontal scrolling
-            });
-        }
-    </script>
-    
-    
-    <script>
-        $(document).ready(function() {
-            $('#loadingSpinner').hide();
-
-            $("#generateButton").click(function() {
-                // Collect parameters
-                const offensiveTeam = $("#offensive_team").val();
-                const defensiveTeam = $("#defensive_team").val();
-                const winning_team  = $("#winning_team").val();
-                const game = $("#game_selector").val();
-                const quarter = $("#quarter").val();
-                const visualizationType = $("#visualization_type").val();
-                const analysisMethod = $("#analysis_method").val();
-                // const metric = $("#metric").val();
-                const offenseFormation = $("#offenseFormation").val();
-                const receiverAlignment = $("#receiverAlignment").val();
-                const pff_passCoverage = $("#pff_passCoverage").val();
-
-                let csrfToken = document.getElementById('csrf_token').value;
-
-                $('#loadingSpinner').show();
-                // Make AJAX request
-                $.ajax({
-                    url: "generate_vis",
-                    method: "POST",
-                    data: {
-                        offensive_team: offensiveTeam,
-                        defensive_team: defensiveTeam,
-                        winning_team: winning_team,
-                        game: game,
-                        quarter: quarter,
-                        visualization_type: visualizationType,
-                        analysis_method: analysisMethod,
-                        //metric: metric,
-                        offenseFormation: offenseFormation, 
-                        receiverAlignment: receiverAlignment, 
-                        pff_passCoverage: pff_passCoverage, 
-                        
-                        csrfmiddlewaretoken: csrfToken // "{{ csrf_token() }}", // Pass CSRF token
-                    },
-                    success: function(response) {
-                        $('#loadingSpinner').hide();
-                        if (response.error) {
-                            alert("Oh, no! "+response.error)
-                        }else {
-
-
-                            // Handle titles with associated image file names
-                            if (response.titles_with_images && typeof response.titles_with_images === "object") {
-                                let contentHtml = ''; // HTML content container
-
-                                // Iterate over each title and its associated images
-                                Object.entries(response.titles_with_images).forEach(([title, images]) => {
-                                    // Append the title as an h2 heading
-                                    contentHtml += `<h2 class='text-info'>${title}</h2>`;
-
-                                    // Check if the images are an array and display them
-                                    if (Array.isArray(images) && images.length > 0) {
-                                        contentHtml += `<div class="container"><div class="row">`; // Start a Bootstrap row
-                                        images.forEach((imageFileName, index) => {
-                                            contentHtml += `
-                                                <div class="col-md-6 mb-3">
-                                                    <img src="data:image/png;base64,${imageFileName}" 
-                                                        alt="Visualization" 
-                                                        class="img-fluid clickable-image" 
-                                                        style="margin-bottom: 10px; cursor: pointer;">
-                                                </div>
-                                            `;
-
-                                            // Close and restart the row after every 2 images
-                                            if ((index + 1) % 2 === 0 && index !== images.length - 1) {
-                                                contentHtml += `</div><div class="row"><hr/>`;
-                                            }
-                                        });
-                                        contentHtml += `</div></div>`; // Close the Bootstrap row and container
-                                    } else {
-                                        // Handle empty image lists
-                                        contentHtml += `<p>No images available.</p>`;
-                                    }
-                                });
-
-                                // Display the generated HTML in the visualization container
-                                $("#visualization_result").html(contentHtml);
-
-                                // Add click event to dynamically load images into the modal
-                                $(".clickable-image").on("click", function () {
-                                    const imageSrc = $(this).attr("src");
-                                    $("#modalImage").attr("src", imageSrc); // Set the modal image source
-                                    $("#imageModal").modal("show"); // Show the modal
-                                });
-                            } else {
-                                // Handle invalid response structure
-                                $("#visualization_result").html('<p>No data available.</p>');
-                            }
-
-
-                            if (response.gen_ai_response) {
-                                // Generate the table dynamically
-                                $("#gen_ai_response_result").html(response.gen_ai_response);
-                            }
-                            
-                        }
-
-                    },
-                    error: function(xhr, status, error) {
-                        $('#loadingSpinner').hide();
-                        alert("An error occurred while generating the visualization: " + error);
-                        $("#visualization_result").html(error);
-                    }
-                });
-            });
-        });
-    </script>
-    
-
-    <script>
-        $(document).ready(function() {
-            // Refresh the page when the reset button is clicked
-            $("#resetButton").click(function() {
-                location.reload(); // Reload the page
-            });
-        });
-    </script>
-    
     {% endblock header %}
 
 {% block main %}
@@ -331,10 +135,10 @@
         <!-- Action Buttons -->
         <div class="row mt-4">
             <div class="col text-center">
-                <button type="button" class="btn btn-primary me-2" id="generateButton">Visualize</button>
                 <button type="button" class="btn btn-secondary me-2" id="resetButton">Reset</button>
-                <button type="button" class="btn btn-success me-2" id="playGameButton">Play Game</button>
-                <button type="button" class="btn btn-info" id="predictButton">Predict</button>
+                <button type="button" class="btn btn-primary me-2" id="generateButton">Run Analysis</button>
+                <a href="/games" class="btn btn-success me-2" target="_blank">Interactive Data Visualizations</a>
+                <button type="button" class="btn btn-info" id="predictButton">Yards Gain Prediction</button>
             </div>
         </div>
 
@@ -374,27 +178,6 @@
     </div>
 </div>
 
- 
- 
- 
- 
-
- 
- 
-
-
- 
-
-
-
-
-
-
- 
-
-
-
-
                                 </div>
                             </div>
                         </div>
@@ -403,7 +186,7 @@
 
              </div>
 
-     </div>   <!---->
+     </div> 
 
 
  <!-- Loading spinner overlay -->
@@ -452,6 +235,131 @@
 
 <!-- Page level custom scripts -->
 <script src="{{ url_for('static', filename='js/demo/datatables-demo.js') }}"></script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#loadingSpinner').hide();
+
+        $("#generateButton").click(function() {
+            // Collect parameters
+            const offensiveTeam = $("#offensive_team").val();
+            const defensiveTeam = $("#defensive_team").val();
+            const winning_team  = $("#winning_team").val();
+            const game = $("#game_selector").val();
+            const quarter = $("#quarter").val();
+            const visualizationType = $("#visualization_type").val();
+            const analysisMethod = $("#analysis_method").val();
+            // const metric = $("#metric").val();
+            const offenseFormation = $("#offenseFormation").val();
+            const receiverAlignment = $("#receiverAlignment").val();
+            const pff_passCoverage = $("#pff_passCoverage").val();
+
+            let csrfToken = document.getElementById('csrf_token').value;
+
+            $('#loadingSpinner').show();
+            // Make AJAX request
+            $.ajax({
+                url: "generate_vis",
+                method: "POST",
+                data: {
+                    offensive_team: offensiveTeam,
+                    defensive_team: defensiveTeam,
+                    winning_team: winning_team,
+                    game: game,
+                    quarter: quarter,
+                    visualization_type: visualizationType,
+                    analysis_method: analysisMethod,
+                    //metric: metric,
+                    offenseFormation: offenseFormation, 
+                    receiverAlignment: receiverAlignment, 
+                    pff_passCoverage: pff_passCoverage, 
+                    
+                    csrfmiddlewaretoken: csrfToken // "{{ csrf_token() }}", // Pass CSRF token
+                },
+                success: function(response) {
+                    $('#loadingSpinner').hide();
+                    if (response.error) {
+                        alert("Oh, no! "+response.error)
+                    }else {
+
+
+                        // Handle titles with associated image file names
+                        if (response.titles_with_images && typeof response.titles_with_images === "object") {
+                            let contentHtml = ''; // HTML content container
+
+                            // Iterate over each title and its associated images
+                            Object.entries(response.titles_with_images).forEach(([title, images]) => {
+                                // Append the title as an h2 heading
+                                contentHtml += `<h2 class='text-info'>${title}</h2>`;
+
+                                // Check if the images are an array and display them
+                                if (Array.isArray(images) && images.length > 0) {
+                                    contentHtml += `<div class="container"><div class="row">`; // Start a Bootstrap row
+                                    images.forEach((imageFileName, index) => {
+                                        contentHtml += `
+                                            <div class="col-md-6 mb-3">
+                                                <img src="data:image/png;base64,${imageFileName}" 
+                                                    alt="Visualization" 
+                                                    class="img-fluid clickable-image" 
+                                                    style="margin-bottom: 10px; cursor: pointer;">
+                                            </div>
+                                        `;
+
+                                        // Close and restart the row after every 2 images
+                                        if ((index + 1) % 2 === 0 && index !== images.length - 1) {
+                                            contentHtml += `</div><div class="row"><hr/>`;
+                                        }
+                                    });
+                                    contentHtml += `</div></div>`; // Close the Bootstrap row and container
+                                } else {
+                                    // Handle empty image lists
+                                    contentHtml += `<p>No images available.</p>`;
+                                }
+                            });
+
+                            // Display the generated HTML in the visualization container
+                            $("#visualization_result").html(contentHtml);
+
+                            // Add click event to dynamically load images into the modal
+                            $(".clickable-image").on("click", function () {
+                                const imageSrc = $(this).attr("src");
+                                $("#modalImage").attr("src", imageSrc); // Set the modal image source
+                                $("#imageModal").modal("show"); // Show the modal
+                            });
+                        } else {
+                            // Handle invalid response structure
+                            $("#visualization_result").html('<p>No data available.</p>');
+                        }
+
+
+                        if (response.gen_ai_response) {
+                            // Generate the table dynamically
+                            $("#gen_ai_response_result").html(response.gen_ai_response);
+                        }
+                        
+                    }
+
+                },
+                error: function(xhr, status, error) {
+                    $('#loadingSpinner').hide();
+                    alert("An error occurred while generating the visualization: " + error);
+                    $("#visualization_result").html(error);
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        // Refresh the page when the reset button is clicked
+        $("#resetButton").click(function() {
+            location.reload(); // Reload the page
+        });
+    });
+</script>
 
 {% endblock footerscripts %}
  

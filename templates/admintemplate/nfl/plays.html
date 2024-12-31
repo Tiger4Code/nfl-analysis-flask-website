@@ -1,0 +1,64 @@
+{% extends 'admintemplate/skeleton/base.html' %}
+
+{% block header %}
+    <!-- Custom styles for this page -->    
+    <style>
+        html,
+        body {
+          height: 100%;
+          background: rgb(248,249,250);
+        }
+        .game{
+          margin-bottom: 15px;
+        }
+        .game-hold{
+          background: #fff;
+          text-align: center;
+          margin-left: 5px;
+          margin-right: 5px;
+        }
+        .select-game{
+          text-align: center;
+          margin-top: 60px;
+          margin-bottom: 60px;
+        }
+    </style>
+    
+    {% endblock header %}
+
+{% block main %}
+<h1 class="select-game">Select a Play to continue</h1>
+<h1 class="select-game display-3 fw-bold">
+{{game.home_team}} VS. {{game.visitor_team}}
+</h1>
+<div class="row">
+{% for play in plays %}
+    <div class="game col-6">
+    <div class="p-lg-5 game-hold">
+        <h3 class="fw-normal text-muted mb-3">Play Number {{play.play_number}}</h3>
+        <h3 class="fw-normal text-muted mb-3">Quarter {{play.quarter}}</h3>
+        <h3 class="fw-normal text-muted mb-3">Down {{play.down}}</h3>
+        <h3 class="fw-normal text-muted mb-3">yards To Go {{play.yards_to_go}}</h3>
+        <p>{{play.name}}</p>
+        <a href="/game/{{play.game_id}}/play/{{play.play_number}}" class="btn btn-primary">Select</a>
+    </div>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock main %}
+
+
+{% block footerscripts %}
+
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+{% endblock footerscripts %}
+ 
