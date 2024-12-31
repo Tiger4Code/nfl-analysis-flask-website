@@ -368,7 +368,8 @@ def inference(df):
     # Data Preparation 
     prepared_data, prepared_df = create_prepared_numpy_array_multi_scaler(df=df, load_scaler=True)
     predictions = loaded_model.predict(prepared_data)
-    return float(predictions[0][0])
+    prediction = round(float(predictions[0][0]), 3)
+    return prediction
 
 def generate_game_clock_values():
     # Generate values for hours from 1 to 14

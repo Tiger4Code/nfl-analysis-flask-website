@@ -193,8 +193,8 @@ function drawField() {
         const x = side === 'left' ? padding : canvas.width - boxWidth - padding;
         
         // Set text properties
-        ctx.fillStyle = 'white';  // Set the text color to white
-        ctx.font = '16px Arial';
+        ctx.fillStyle = side === 'left' ? 'yellow' : 'red';  // Set the text color to white
+        ctx.font = 'bold 20px Arial';
         ctx.textBaseline = 'middle';
     
         // Save the current context state

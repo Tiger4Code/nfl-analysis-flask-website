@@ -224,7 +224,7 @@ def selectOffenseDeffenseTeams(df,
         cond &= df['defensiveTeam'] == defensiveTeam
     
     if quarter is not None:
-        cond &= df['quarter'] == quarter
+        cond &= df['quarter'] == int(quarter)
 
     if winningTeam is not None:
         if '_winnerTeamAbbr' in df.columns:

@@ -72,7 +72,7 @@ def visualize():
     df = get_cached_dataframe()
     unique_quarters = sorted(df['quarter'].unique())
 
-    pff_passCoverage_list = df.pff_passCoverage.unique()
+    pff_passCoverage_list = df.pff_passCoverage.dropna().unique()
     game_clock = features_engineering.generate_game_clock_values()
     
     # Context to pass to the template
@@ -84,8 +84,8 @@ def visualize():
         'game_clock': game_clock,
         'downs': df.down.unique(),
         'yardline_numbers': features_engineering.generate_yardline_numbers(),
-        'offense_formations': df.offenseFormation.unique(),
-        'receiver_alignments': df.receiverAlignment.unique(),
+        'offense_formations': df.offenseFormation.dropna().unique(),
+        'receiver_alignments': df.receiverAlignment.dropna().unique(),
         'coverages': pff_passCoverage_list,
     }
 
@@ -159,6 +159,9 @@ def generate_vis():
             offense_filtered_df = helpers.selectOffenseDeffenseTeams(
                 df, game_id, offensive_team, None, quarter, winning_team, offense_formation, receiver_alignment, pff_pass_coverage
             )
+            if offense_filtered_df.shape[0] == 0:
+                return jsonify({"error": "Sorry, no matching data!"})
+
             offense_image_list, offense_motion_df, offense_time_grouped_df = ghelpers.visualize_data_func(
                 offense_filtered_df, offense_formation, receiver_alignment, pff_pass_coverage
             )
@@ -204,10 +207,6 @@ def predict():
     game_clock = request.form.get("game_clock") if request.form.get("game_clock") else "00:30"
     yardline_number = request.form.get("yardline_number") if request.form.get("yardline_number") else 1
 
-    # "offenseFormation", "receiverAlignment", "pff_passCoverage", 
-    # "down", "possessionTeam", "defensiveTeam",
-    # "quarter", 'gameClock', 
-    # "yardlineNumber" , "playDirection"
     
     if offensive_team is not None and defensive_team is not None and offense_formation is not None and receiver_alignment is not None and pff_pass_coverage is not None:
         if offensive_team and defensive_team and offensive_team == defensive_team:
@@ -226,8 +225,6 @@ def predict():
                                                               playDirection="left")
             
             prediction = features_engineering.inference(df=df)
-            print("-------------- prediction ---------------")
-            print(prediction)
         return jsonify({'prediction': prediction})
     else: 
         return jsonify({"error": "Please select offense, defense teams, their strategies, besides downs, game clock, and yards number"})
@@ -397,7 +394,25 @@ def play(id, play_id):
             
     return render_template('admintemplate/nfl/canvas.html', play=play, game=game, player_metrics=player_metrics, teams=teams, play_metrics=play_metrics, player_details=player_details, ordinal=ordinal, visiter_players=visiter_players, home_players=home_players, players=json.dumps(list(players.values())), frame_count_ball_rece=frame_count_ball_rece)
 
+@app.route('/games/prediction/<float:yards>/<offensive>/<receiver>/<coverage>')
+def prediction_display(yards, offensive, receiver, coverage):
+
+    cursor = connection.cursor() 
+
+    cursor.execute(
+        """
+        SELECT * FROM plays 
+        WHERE pff_pass_coverage = ? 
+          AND offense_formation = ?
+          AND receiver_alignment = ? 
+        """, 
+        (coverage, offensive, receiver)
+    )
+    plays = cursor.fetchall()
+        
+    return render_template('admintemplate/nfl/model.html', yards=yards, plays=plays)
+
 if __name__ == '__main__':
     Timer(1, open_browser).start()  # Open the browser after starting the server
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)
 

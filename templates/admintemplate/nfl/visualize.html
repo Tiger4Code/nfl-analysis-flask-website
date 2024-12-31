@@ -150,7 +150,7 @@
             <div class="col-md-2">
                 <label for="downs" class="form-label">Downs</label>
                 <select class="form-control form-select" id="downs" name="downs">
-                    <option value="" selected disabled> Quarter</option>
+                    <option value="" selected disabled> Down</option>
                     {% for down in downs %}
                         <option value="{{ down }}">{{ down }}</option>
                     {% endfor %}
@@ -164,12 +164,12 @@
         <div class="row mt-4">
             <div class="col text-center">
                 <button type="button" class="btn btn-primary me-2" id="generateButton">Run Analysis</button>
-                <a href="/games" class="btn btn-success me-2" target="_blank">Interactive Data Visualizations</a>
                 <button type="button" class="btn btn-info" id="predictButton">Yards Gain Prediction</button>
+                <a href="/games" class="btn btn-success me-2" target="_blank">Interactive Data Visualizations</a>
                 <button type="button" class="btn btn-secondary me-2" id="resetButton">Reset</button>
             </div>
         </div>
-
+        <p><small>* All fields are required to predect yards gained.</small></p>
      </form>
  </div>
  <hr/>
@@ -180,36 +180,18 @@
     <div class="row mb-3">
         <div id="visualization_result" class="mt-4">
             <!-- Visualization output will be injected here -->
-             Data Visualizations go here 
+             Please select your fields and click Run Analysis
         </div>
     </div>
 
     <hr/>
-    <h2>Statistical Analysis</h2>
-    <div class="row mb-3">
 
-        <div id="visualization_statistics_result" class="mt-4">
-            <!-- Visualization output will be injected here -->
-             Statistics results go here 
-        </div>
-    </div>
-
-    <hr/>
     <h2>AI-Assisted Strategy Evaluation</h2>
     <div class="row mb-3">
 
         <div id="gen_ai_response_result" class="mt-4">
             <!-- Visualization output will be injected here -->
-            Analysis goes here 
-        </div>
-    </div>
-
- 
-    <div class="row mb-3">
-
-        <div id="prediction_response_result" class="mt-4">
-            <!-- Visualization output will be injected here -->
-            Predictions goes here 
+            Please select your fields and click Run Analysis
         </div>
     </div>
 </div>
@@ -311,10 +293,12 @@
                         }else {
                             if (response.prediction) {
                                 // Generate the table dynamically
-                                let contentHtml = '';     
-                                contentHtml += `<h2 class='text-info'>Predicted Value</h2>`;
-                                contentHtml += `<div ><b>${response.prediction}</b></div>`;
-                                $("#prediction_response_result").html(contentHtml);
+                                // let contentHtml = '';     
+                                // contentHtml += `<h2 class='text-info'>Predicted Value</h2>`;
+                                // contentHtml += `<div ><b>${response.prediction}</b></div>`;
+                                // $("#prediction_response_result").html(contentHtml);
+
+                                window.location.href = `/games/prediction/${response.prediction}/${offenseFormation}/${receiverAlignment}/${pff_passCoverage}`
                             }
                             
                         }
