@@ -31,7 +31,7 @@ Users can predict yardage for a specific combination of parameters using the bui
 
 ### Prerequisites
 Ensure you have the following installed:
-- Python 3.8+
+- Python 3.10
 - pip (Python package manager)
 - Virtual environment (optional but recommended)
 
@@ -42,22 +42,31 @@ Ensure you have the following installed:
    cd nfl-analysis-flask-website
    ```
 
-2. Create and activate a virtual environment (optional):
+2. Download the data:
+
+
+3. Extract the data:
+   ```bash
+   tar -xzvf database.sqlite.tar.gz
+   tar -xzvf dataset.tar.gz
+   ```
+
+4. Create and activate a virtual environment (optional):
    ```bash
    python3 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Install the required dependencies:
+5. Install the required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Run the application:
+6. Run the application:
    ```bash
-   flask run
+   python app.py
    ```
-   The application will be accessible at `http://127.0.0.1:5000/`.
+   The application will be accessible at `http://127.0.0.1:5001/`.
 
 ## Usage
 1. Open the application in your web browser.
@@ -66,6 +75,7 @@ Ensure you have the following installed:
    - Visualizations.
    - AI insights for aggregated results.
    - Predicted yardage for the selected combination.
+   - Select Interactive Data Visualizations to see 2D play.
 
 ## Tech Stack
 - **Backend**: Flask
@@ -81,7 +91,8 @@ Ensure you have the following installed:
 ├── static/                # Static files (CSS, JS, images)
 ├── templates/             # HTML templates
 ├── models/                # Predictive models and data processing scripts
-├── data/                  # Sample datasets
+├── dataset/               # Sample datasets
+├── model_artifacts/       # Model Artifacts
 ├── requirements.txt       # Python dependencies
 └── README.md              # Project documentation
 ```
