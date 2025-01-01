@@ -81,20 +81,21 @@ Ensure you have the following installed:
 - **Backend**: Flask
 - **Frontend**: HTML, CSS, JavaScript
 - **AI Integration**: Claude 3.5 Sonnet (LLM)
-- **Data Analysis**: Pandas, NumPy, Matplotlib, Seaborn
+- **Data Analysis**: Pandas, NumPy, Matplotlib, Seaborn, Tensorflow, Keras
 - **Predictive Model**: Trained using Scikit-learn
 
 ## Project Structure
 ```
 .
-├── app.py                 # Main Flask application
-├── static/                # Static files (CSS, JS, images)
-├── templates/             # HTML templates
-├── models/                # Predictive models and data processing scripts
-├── dataset/               # Sample datasets
-├── model_artifacts/       # Model Artifacts
-├── requirements.txt       # Python dependencies
-└── README.md              # Project documentation
+├── app.py                   # Main Flask application
+├── static/                  # Static files (CSS, JS, images)
+├── templates/               # HTML templates
+├── models_artifacts/        # Predictive models and data processing artifacts
+├── notebook/                # Model training notebook
+├── dataset/                 # Sample datasets
+├── model_artifacts/         # Model Artifacts
+├── requirements.txt         # Python dependencies
+└── README.md                # Project documentation
 ```
 
 ## Future Enhancements
