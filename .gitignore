@@ -65,3 +65,6 @@ utils/bedrock/__pycache__/*
 database.sqlite
 database.sqlite.tar.gz
 dataset.tar.gz
+
+
+README.txt
