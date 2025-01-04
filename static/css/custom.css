@@ -3,6 +3,71 @@
     padding: 15px;
 }
 
+.text-nfl-align {
+    text-align: right;
+    margin-right: 30px;
+}
+
+.text-nfl-danger {
+    color: #BD2E54 !important;
+}
+
+.text-nfl-info {
+    color: #A1CDD5 !important;
+}
+
+.text-nfl-primary {
+    color: #1E3649 !important;
+}
+
+.text-nfl-gry {
+    color: #536578 !important;
+}
+
+.border-nfl-danger {
+    border-color: #BD2E54 !important;
+    border-radius: 15px !important;
+}
+
+.border-nfl-primay {
+    border-color: #1E3649 !important;
+    border-radius: 15px !important;
+}
+
+.border-nfl-info {
+    border-color: #A1CDD5 !important;
+    border-radius: 15px !important;
+}
+
+.border-nfl-gry {
+    border-color: #536578 !important;
+    border-radius: 15px !important;
+}
+
+.btn-nfl-primary {
+    color: #fff;
+    background-color: #1E3649 !important;
+    border-color: #1E3649 !important;
+}
+
+.btn-nfl-danger {
+    color: #fff;
+    background-color: #BD2E54 !important;
+    border-color: #BD2E54 !important;
+}
+
+.btn-nfl-info {
+    color: #fff;
+    background-color: #A1CDD5 !important;
+    border-color: #A1CDD5 !important;
+}
+
+.btn-nfl-gry {
+    color: #fff;
+    background-color: #BD2E54 !important;
+    border-color: #BD2E54 !important;
+}
+
 .loading-overlay {
     display: none;
     /* Initially hidden */

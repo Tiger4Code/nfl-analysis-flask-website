@@ -27,23 +27,56 @@
     {% endblock header %}
 
 {% block main %}
-<h1 class="select-game">Select a Play to continue</h1>
-<h1 class="select-game display-3 fw-bold">
-{{game.home_team}} VS. {{game.visitor_team}}
-</h1>
 <div class="row">
-{% for play in plays %}
-    <div class="game col-6">
-    <div class="p-lg-5 game-hold">
-        <h3 class="fw-normal text-muted mb-3">Play Number {{play.play_number}}</h3>
-        <h3 class="fw-normal text-muted mb-3">Quarter {{play.quarter}}</h3>
-        <h3 class="fw-normal text-muted mb-3">Down {{play.down}}</h3>
-        <h3 class="fw-normal text-muted mb-3">yards To Go {{play.yards_to_go}}</h3>
-        <p>{{play.name}}</p>
-        <a href="/game/{{play.game_id}}/play/{{play.play_number}}" class="btn btn-primary">Select</a>
-    </div>
-    </div>
-{% endfor %}
+  <div class="col-lg-12">
+        <h1 style="text-align: center;">Select a Play to continue</h1>
+  </div>
+  <div class="col-lg-12">
+      <h2 style="text-align: center;" class="text-primary"> <b> {{game.home_team}} VS. {{game.visitor_team}} </b></h2>
+  </div>
+</div>
+
+<div class="container mt-5">
+  <div class="row">
+    {% for play in plays %}
+      <div class="col-md-4 mb-4">
+        <div class="game-hold border rounded shadow-sm p-4 bg-white border-nfl-danger">
+          <h3 class="fw-bold text-center mb-3 text-nfl-primary">
+            <b> {{ game.home_team }} VS. {{ game.visitor_team }}</b>
+          </h3>
+          <ul class="list-unstyled">
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Play Number:</b>
+              <span>{{ play.play_number }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Quarter:</b>
+              <span>{{ play.quarter }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Down:</b>
+              <span>{{ play.down }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Yards to Go:</b>
+              <span>{{ play.yards_to_go }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Final Score:</b>
+              <span>{{ game.home_final_score }} > {{ game.visitor_final_score }}</span>
+            </li>
+
+            <li class="fw-normal text-muted mb-3">
+              <b class="text-nfl-info">{{ play.name }}</b>
+            </li>
+          </ul>
+          <div class="d-flex justify-content-center">
+            <a href="/game/{{ play.game_id }}/play/{{ play.play_number }}" class="btn btn-nfl-danger w-100 mt-3">Select Play</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
 </div>
 
 {% endblock main %}

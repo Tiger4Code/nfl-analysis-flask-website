@@ -19,8 +19,8 @@
         }
         .select-game{
           text-align: center;
-          margin-top: 60px;
-          margin-bottom: 60px;
+          margin-top: 30px;
+          margin-bottom: 30px;
         }
     </style>
     
@@ -28,26 +28,51 @@
 
 {% block main %}
 
+<div class="col-lg-12">
+  <h2 style="text-align: center;" class="text-nfl-primary">  The predicted yards gained from this strategy is: <strong class="text-nfl-danger">{{yards}}</strong></h2>
+  <h3 class="select-game" class="text-nfl-gry">We found {{plays | length}} plays that employ this strategy. Select a play visualize.</h3>
+</div>
 
+<div class="container">
+  <div class="row">
+    {% for play in plays %}
+      <div class="col-md-4 mb-4">
+        <div class="game-hold border shadow-sm p-4 bg-white border-nfl-danger">
+          <h3 class="display-5 fw-bold text-nfl-primary">{{play.possession_team}} VS. {{play.defensive_team}}</h3>
+          <hr>
+          <ul class="list-unstyled">
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Play Number:</b>
+              <span>{{ play.play_number }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Quarter:</b>
+              <span>{{ play.quarter }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Down:</b>
+              <span>{{ play.down }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Yards to Go:</b>
+              <span>{{ play.yards_to_go }}</span>
+            </li>
+            <li class="d-flex mb-3">
+              <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Final Score:</b>
+              <span>{{play.yards_gained}}</span>
+            </li>
 
-<h1 class="select-game">The predicted yards gained from this strategy is: <strong class="text-success">{{yards}}</strong></h1>
-<h2 class="select-game">We found {{plays | length}} plays that employ this strategy. Select a play visualize.</h2>
-<div class="row">
-  {% for play in plays %}
-    <div class="game col-6">
-      <div class="p-lg-5 game-hold">
-        <h2 class="fw-normal text-muted mb-3">{{play.possession_team}} VS. {{play.defensive_team}}</h2>
-        <hr>
-        <h4 class="fw-normal text-muted mb-3">Play Number {{play.play_number}}</h4>
-        <h4 class="fw-normal text-muted mb-3">Quarter {{play.quarter}}</h4>
-        <h4 class="fw-normal text-muted mb-3">Down {{play.down}}</h4>
-        <h4 class="fw-normal text-muted mb-3">Yards To Go {{play.yards_to_go}}</h4>
-        <h4 class="fw-normal text-muted mb-3">Yards Gained {{play.yards_gained}}</h4>
-        <p>{{play.name}}</p>
-        <a href="/game/{{play.game_id}}/play/{{play.play_number}}" class="btn btn-primary">Select</a>
+            <li class="fw-normal text-muted mb-3">
+              <b class="text-nfl-info">{{ play.name }}</b>
+            </li>
+          </ul>
+          <div class="d-flex justify-content-center">
+            <a href="/game/{{play.game_id}}/play/{{play.play_number}}" class="btn btn-nfl-danger w-100 mt-3">Select</a>
+          </div>
+        </div>
       </div>
-    </div>
-  {% endfor %}
+    {% endfor %}
+  </div>
 </div>
 
 

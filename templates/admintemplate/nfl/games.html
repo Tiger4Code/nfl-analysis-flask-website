@@ -8,50 +8,90 @@
           height: 100%;
           background: rgb(248,249,250);
         }
-        .game{
-          margin-bottom: 15px;
+        .game {
+          margin-bottom: 20px;
         }
-        .game-hold{
+        .game-hold {
           background: #fff;
+          border-radius: 10px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           text-align: center;
-          margin-left: 5px;
-          margin-right: 5px;
+          padding: 20px;
+          transition: transform 0.3s ease;
+          height: 100%;
         }
-        .select-game{
+        .game-hold:hover {
+          transform: translateY(-5px);
+        }
+        .select-game {
+          margin-top: 40px;
+          margin-bottom: 30px;
           text-align: center;
-          margin-top: 60px;
-          margin-bottom: 60px;
+        }
+        .game h1 {
+          font-size: 1.75rem;
+          font-weight: 600;
+        }
+        .game h3 {
+          font-size: 1rem;
+          color: #6c757d;
+        }
+        .btn-primary {
+          background-color: #007bff;
+          border: none;
+          font-size: 0.9rem;
+          padding: 8px 16px;
+          border-radius: 5px;
+        }
+        .btn-primary:hover {
+          background-color: #0056b3;
         }
     </style>
-    
-    {% endblock header %}
+{% endblock header %}
 
 {% block main %}
 
-
-
-<h1 class="select-game">Select a Game to Visualize</h1>
 <div class="row">
-{% for game in games %}
-    <div class="game col-6">
-    <div class="p-lg-5 game-hold">
-        <h1 class="display-3 fw-bold">
-        {{game.home_team}} VS. {{game.visitor_team}}
-        </h1>
-        <h3 class="fw-normal text-muted mb-3">Week {{game.week}} on {{game.game_date}}</h3>
-        <h3 class="fw-normal text-muted mb-3">Final Score {{game.home_final_score}} > {{game.visitor_final_score}} </h3>
-        <a href="/game/{{game.id}}" class="btn btn-primary">Select</a>
+  <div class="col-lg-12">
+        <h1 style="text-align: center;">Select a Game to Visualize</h1>
     </div>
-    </div>
-{% endfor %}
-</div>
+  </div>
+<br/>
 
+<div class="container">
+    <div class="row">
+        {% for game in games %}
+
+        <div class="col-md-4 mb-4">
+          <div class="game-hold border shadow-sm p-4 bg-white border-nfl-danger">
+            <h3 class="display-5 fw-bold text-nfl-primary">
+              <b> {{ game.home_team }} VS. {{ game.visitor_team }}</b>
+            </h3>
+            <ul class="list-unstyled">
+              <li class="d-flex mb-3">
+                <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Week:</b>
+                <span>{{ game.week }} on {{ game.game_date }}</span>
+              </li>
+              <li class="d-flex mb-3">
+                <b class="text-nfl-gry pe-2 text-nfl-align" style="min-width: 150px;">Final Score:</b>
+                <span>{{ game.home_final_score }} > {{ game.visitor_final_score }}</span>
+              </li>
+            </ul>
+            <div class="d-flex justify-content-center">
+              <a href="/game/{{ game.id }}" class="btn btn-nfl-danger w-100 mt-3">Select Play</a>
+            </div>
+          </div>
+        </div>
+        
+        
+        
+        {% endfor %}
+    </div>
+</div>
 
 {% endblock main %}
 
-
 {% block footerscripts %}
-
 <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
@@ -60,6 +100,4 @@
 
 <!-- Custom scripts for all pages-->
 <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
-
 {% endblock footerscripts %}
- 
