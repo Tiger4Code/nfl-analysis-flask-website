@@ -416,5 +416,5 @@ def prediction_display(yards, offensive, receiver, coverage):
 
 if __name__ == '__main__':
     Timer(1, open_browser).start()  # Open the browser after starting the server
-    app.run(debug=False, port=5001)
+    app.run(host="0.0.0.0", debug=False, port=5001)
 
