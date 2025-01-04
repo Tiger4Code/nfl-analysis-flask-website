@@ -131,7 +131,7 @@ Ensure you have the following installed:
 - Expand AI analysis to cover specific game scenarios.
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [Unlicense](LICENSE).
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for suggestions and improvements.
