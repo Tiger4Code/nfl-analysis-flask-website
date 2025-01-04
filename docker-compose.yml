@@ -3,7 +3,7 @@ services:
     image: nfl-analysis-flask-website
     container_name: nfl_app
     ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
+      - "5000:5001"
     restart: always
+    volumes:
+      - ./database.sqlite:/app/database.sqlite

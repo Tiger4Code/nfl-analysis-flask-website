@@ -36,6 +36,8 @@ Ensure you have the following installed:
 - Virtual environment (optional but recommended)
 
 ### Steps
+#### Using Python Environment 
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/your-username/nfl-analysis-flask-website.git
@@ -67,6 +69,11 @@ Ensure you have the following installed:
    python app.py
    ```
    The application will be accessible at `http://127.0.0.1:5001/`.
+
+#### Using Docker Container
+   ```bash
+   docker-compose up
+   ```
 
 ## Usage
 1. Open the application in your web browser.
