@@ -85,7 +85,7 @@ Ensure you have the following installed:
    - Select Interactive Data Visualizations to see 2D play.
 
 ## Interactive Data Visualization 
-   [Data Analysis via Game 2D Interactive Visualization](static/game/tracking.gif)
+   ![Data Analysis via Game 2D Interactive Visualization](static/game/tracking.gif)
 
 ## Tech Stack
 - **Backend**: Flask
