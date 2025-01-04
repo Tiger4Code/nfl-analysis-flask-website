@@ -1,9 +1,11 @@
 services:
   flask_app:
-    image: nfl-analysis-flask-website
+    build:
+      context: ./
+      dockerfile: Dockerfile
     container_name: nfl_app
     ports:
-      - "5000:5001"
+      - "5001:5001"
     restart: always
     volumes:
-      - ./database.sqlite:/app/database.sqlite
+      - ./:/app
