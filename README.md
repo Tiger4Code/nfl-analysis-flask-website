@@ -137,4 +137,4 @@ This project is licensed under the [Unlicense](LICENSE).
 Contributions are welcome! Please open an issue or submit a pull request for suggestions and improvements.
 
 ## Contact
-For questions or feedback, reach out to [Your Name](mailto:light.email.work@gmail.com).
+For questions or feedback, reach out to [Tiger Team](mailto:light.email.work@gmail.com).
