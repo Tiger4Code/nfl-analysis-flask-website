@@ -1,7 +1,23 @@
 # NFL Strategy Analysis and Prediction Flask Application
 
 ## Overview
-This Flask application is designed for NFL competition enthusiasts and analysts, providing an interactive way to analyze and predict the effects of various strategies. Users can explore combinations of offensive and defensive parameters, view insightful visualizations, and leverage AI-powered analysis to gain deeper insights into game strategies.
+
+This Flask application is designed for NFL competition enthusiasts and analysts, providing an interactive way to analyze and predict the effects of various strategies based on pre/post snap behaviors. Users can explore combinations of offensive and defensive parameters, view insightful visualizations, and leverage AI-powered analysis to gain deeper insights into game strategies.
+
+### Pre-Snap to Post-Snap Analysis: Insights, Predictions, and Visualizations
+
+#### Objective
+- Provide actionable insights on offensive and defensive strategies.
+- Predict post-snap outcomes based on pre-snap behaviors.
+- Enable coaches, analysts, and players to understand tendencies through a user-friendly website.
+
+#### Key Components
+- Data Analysis and Visualization
+- LLM-Driven Descriptive Insights
+- Machine Learning for Yardage Prediction
+- Game Playback for Historical Comparison
+
+
 
 ## Features
 
