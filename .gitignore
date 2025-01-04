@@ -57,6 +57,7 @@ Thumbs.db
 dataset/
 .dataset/
 .DS_Store
+static/.DS_Store
 
 utils/__pycache__/
 utils/__pycache__/*
